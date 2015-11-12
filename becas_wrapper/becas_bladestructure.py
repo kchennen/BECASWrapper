@@ -5,7 +5,7 @@ import os
 from collections import OrderedDict
 from scipy.interpolate import pchip
 
-from openmdao.api import Component, Group, ParallelGroup
+from openmdao.api import Component, Group, ParallelGroup, ExecComp
 from openmdao.api import IndepVarComp
 
 from cs2dtobecas import CS2DtoBECAS
@@ -53,7 +53,7 @@ class BECASCSStructure(Component):
         matrix, respectively.
     """
 
-    def __init__(self, name, config, st3d, s, ni_chord, cs_size):
+    def __init__(self, name, becas_hash, config, st3d, s, ni_chord, cs_size):
         """
         parameters
         ----------
@@ -71,7 +71,7 @@ class BECASCSStructure(Component):
         super(BECASCSStructure, self).__init__()
 
         self.basedir = os.getcwd()
-
+        self.becas_hash = becas_hash
         self.nr = len(st3d['regions'])
         self.ni_chord = ni_chord
 
@@ -122,6 +122,12 @@ class BECASCSStructure(Component):
 
         # add outputs
         self.add_output('%s:cs_props' % name, np.zeros(cs_size))
+
+        self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
+        # not so nice hack to ensure unique directory names when
+        # running parallel FD
+        # the hash is passed to downstream BECASStressRecovery class
+        self.add_output(name + ':hash', float(self.becas_hash))
 
         self.mesher = CS2DtoBECAS(self.cs2di, **config['CS2DtoBECAS'])
         self.becas = BECASWrapper(self.cs2di['s'], **config['BECASWrapper'])
@@ -183,13 +189,12 @@ class BECASCSStructure(Component):
         calls CS2DtoBECAS/shellexpander to generate mesh
         and BECAS to compute the cs_props
         """
-        workdir = 'becas_sec%3.3f_%i' % (self.cs2di['s'], self.__hash__())
 
         try:
-            os.mkdir(workdir)
+            os.mkdir(self.workdir)
         except:
             pass
-        os.chdir(workdir)
+        os.chdir(self.workdir)
 
         self._params2dict(params)
 
@@ -469,6 +474,9 @@ class BECASBeamStructure(Group):
         nr = len(st3d['regions'])
         nsec = st3d['s'].shape[0]
 
+        # create a unique ID for this group so that FD's are not overwritten
+        self.add('hash_c', ExecComp('becas_hash=%f' % float(self.__hash__())), promotes=['*'])
+
         # add comp to slice the 2D arrays DPs and surface
         self.add('slice', Slice(st3d, sdim), promotes=['*'])
 
@@ -487,7 +495,7 @@ class BECASBeamStructure(Group):
 
         for i in range(nsec):
             secname = 'sec%03d' % i
-            par.add(secname, BECASCSStructure(secname, config, st3d,
+            par.add(secname, BECASCSStructure(secname, self.__hash__(), config, st3d,
                                               st3d['s'][i], sdim[0], cs_size), promotes=['*'])
 
         promotions = ['hub_radius',

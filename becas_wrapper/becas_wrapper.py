@@ -170,18 +170,18 @@ class BECASWrapper(object):
 
         tt = time.time()
 
-        try:
-            if self.exec_mode == 'oct2py':
-                self.execute_oct2py()
+        # try:
+        if self.exec_mode == 'oct2py':
+            self.execute_oct2py()
 
-            elif self.exec_mode in ['matlab', 'octave']:
-                self.execute_shell()
-        except:
-            if self.hawc2_FPM:
-                self.cs_props = np.zeros(30)
-            else:
-                self.cs_props = np.zeros(19)
-            self.cs_props[1] = 1.e6
+        elif self.exec_mode in ['matlab', 'octave']:
+            self.execute_shell()
+        # except:
+        #     if self.hawc2_FPM:
+        #         self.cs_props = np.zeros(30)
+        #     else:
+        #         self.cs_props = np.zeros(19)
+        #     self.cs_props[1] = 1.e6
             # self.max_failure.cases = np.zeros(len(self.load_cases.cases))
         #     self._logger.info('BECAS crashed at R = %2.2f ...' % self.spanpos)
 
@@ -195,7 +195,7 @@ class BECASWrapper(object):
         out_str = []
         self.setup_path()
 
-        self.utils_rst_filename = os.path.join(self.basedir, self.utils_rst_filebase + '%3.3f.mat' % self.spanpos)
+        self.utils_rst_filename = self.utils_rst_filebase + '%3.3f.mat' % (self.spanpos)
         # self._logger.info('shell execution with analysis_mode = %s' % self.analysis_mode)
 
         out_str.append('BECAS_SetupPath;\n')
@@ -222,7 +222,7 @@ class BECASWrapper(object):
 
             elif self.exec_mode == 'matlab':
                 out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
-            print out
+            # print out
             # self._logger.info(out)
 
             if self.analysis_mode in ['stiffness', 'combined']:
@@ -230,19 +230,19 @@ class BECASWrapper(object):
                 os.remove('BECAS2HAWC2.out')
 
         if self.analysis_mode in ['combined', 'stress_recovery']:
-            try:
-                failure = []
-                ks_failure = []
-                for i in range(len(self.load_cases.cases)):
-                    data = np.loadtxt('failure%i.out' % i)
-                    # evaluate KS function of the failure criteria
-                    ks_failure.append(ksfunc(data.flatten(), rho=self.rho_ks))
-                    # also save the actual max value
-                    failure.append(np.max(data))
-                self.max_failure.cases = failure
-                self.max_failure_ks.cases = ks_failure
-            except:
-                pass
+            # try:
+            failure = []
+            ks_failure = []
+            for i in range(self.load_cases.shape[0]):
+                data = np.loadtxt('failure%i.out' % i)
+                # evaluate KS function of the failure criteria
+                ks_failure.append(ksfunc(data.flatten(), rho=self.rho_ks))
+                # also save the actual max value
+                failure.append(np.max(data))
+            self.max_failure = np.array(failure)
+            self.max_failure_ks = np.array(ks_failure)
+            # except:
+            #     pass
 
     def add_utils(self, out_str):
 
@@ -268,22 +268,21 @@ class BECASWrapper(object):
         out_str.append("OutputFilename='%s'; \n" % 'BECAS2HAWC2.out')
         out_str.append("utils.hawc2_flag=%s ;\n" % str(not self.hawc2_FPM).lower())
         out_str.append('BECAS_Becas2Hawc2(OutputFilename,RadialPosition,constitutive,csprops,utils)\n')
-        out_str.append("save('%s', 'utils', 'solutions', 'csprops')\n" % self.utils_rst_filename)
+        out_str.append("save('-hdf5', '%s', 'utils', 'solutions', 'csprops')\n" % self.utils_rst_filename)
 
         return out_str
 
     def add_stress_recovery(self, out_str):
 
         # load utils and solutions from saved file
-        self.utils_rst_filename = os.path.join(self.basedir, self.utils_rst_filebase + '%3.3f.mat' % self.load_cases.s)
         # self._logger.info('checking for file %s' % self.utils_rst_filename)
         if self.analysis_mode == 'stress_recovery' and os.path.exists(self.utils_rst_filename):
             out_str.append("load('%s', 'utils', 'solutions', 'csprops')\n" % self.utils_rst_filename)
         else:
             raise RuntimeError('utils_rst_filename %s was not found!' % self.utils_rst_filename)
 
-        for i, case in enumerate(self.load_cases.cases):
-            load_vector = case._toarray()[[1, 2, 3, 5, 6, 7]]
+        for i in range(self.load_cases.shape[0]):
+            load_vector = self.load_cases[i, :]
             if np.sum(load_vector) == 0.:
                 np.savetxt('failure%i.out'%i, np.zeros(100))
             else:
@@ -306,7 +305,7 @@ class BECASWrapper(object):
                 path = os.path.join(self.basedir, self.path_plots)
                 if not os.path.exists(path):
                     os.mkdir(path)
-                dirname = os.path.join(path, '%s_span%3.3f_case%i' % ('Sec', self.load_cases.s, i))
+                dirname = os.path.join(path, '%s_span%3.3f_case%i' % ('Sec', self.spanpos, i))
                 # self._logger.info('BECAS_PARAVIEW: saving to %s' % dirname)
                 out_str.append("warping=solutions.X*theta0'; \n")
                 out_str.append("BECAS_PARAVIEW( '%s', utils, csprops, warping, strain.MaterialElement, stress.MaterialElement, failure )\n"
