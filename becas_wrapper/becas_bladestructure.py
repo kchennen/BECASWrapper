@@ -216,7 +216,8 @@ class Slice(Component):
     DP<xx>: array
         arrays of DPs along span. Size: (nsec)
     blade_surface_norm_st: array
-        blade surface. Size: ((ni_chord, nsec, 3))
+        blade surface with structural discretization, no twist and prebend.
+        Size: ((ni_chord, nsec, 3))
 
     returns
     -------
@@ -244,7 +245,7 @@ class Slice(Component):
         for i in range(self.nDP):
             self.add_param('DP%02d' % i, DPs[:, i])
 
-        self.add_param('blade_surface_st', np.zeros(sdim))
+        self.add_param('blade_surface_norm_st', np.zeros(sdim))
 
         vsize = 0
         self._varnames = []
@@ -274,7 +275,7 @@ class Slice(Component):
             for j in range(self.nDP):
                 DPs[j] = params['DP%02d' % j][i]
             unknowns['sec%03d:DPs' % i] = DPs
-            unknowns['sec%03d:coords' % i] = params['blade_surface_st'][:, i, :]
+            unknowns['sec%03d:coords' % i] = params['blade_surface_norm_st'][:, i, :]
             for ii, name in enumerate(self._varnames):
                 unknowns['sec%03d:tvec' % i][ii] = params[name + 'T'][i]
                 unknowns['sec%03d:tvec' % i][nvar+ii] = params[name + 'A'][i]
@@ -398,8 +399,9 @@ class BECASBeamStructure(Group):
         dimensionalised y-coordinates of blade axis with structural discretization.
     blade_z: array
         dimensionalised z-coordinates of blade axis with structural discretization.
-    blade_surface_st: array
-        blade surface with structural discretization. Size: ((ni_chord, nsec, 3))
+    blade_surface_norm_st: array
+        blade surface with structural discretization, no twist and prebend.
+        Size: ((ni_chord, nsec, 3))
     matprops: array
         material stiffness properties. Size (10, nmat).
     failmat: array
