@@ -122,7 +122,7 @@ class BECASCSStructure(Component):
 
         # add outputs
         self.add_output('%s:cs_props' % name, np.zeros(cs_size))
-
+        self.cs_props_m1 = np.zeros(cs_size)
         self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
         # not so nice hack to ensure unique directory names when
         # running parallel FD
@@ -201,7 +201,11 @@ class BECASCSStructure(Component):
         self.mesher.cs2d = self.cs2d
         self.mesher.compute()
         self.becas.compute()
-        self.unknowns['%s:cs_props' % self.name] = self.becas.cs_props
+        if self.becas.success:
+            self.unknowns['%s:cs_props' % self.name] = self.becas.cs_props
+            self.cs_props_m1 = self.becas.cs_props.copy()
+        else:
+            self.unknowns['%s:cs_props' % self.name] = self.cs_props_m1.copy()
 
         os.chdir(self.basedir)
 

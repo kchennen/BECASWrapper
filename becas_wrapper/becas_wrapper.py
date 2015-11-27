@@ -170,20 +170,21 @@ class BECASWrapper(object):
 
         tt = time.time()
 
-        # try:
-        if self.exec_mode == 'oct2py':
-            self.execute_oct2py()
+        try:
+            if self.exec_mode == 'oct2py':
+                self.execute_oct2py()
 
-        elif self.exec_mode in ['matlab', 'octave']:
-            self.execute_shell()
-        # except:
-        #     if self.hawc2_FPM:
-        #         self.cs_props = np.zeros(30)
-        #     else:
-        #         self.cs_props = np.zeros(19)
-        #     self.cs_props[1] = 1.e6
-            # self.max_failure.cases = np.zeros(len(self.load_cases.cases))
-        #     self._logger.info('BECAS crashed at R = %2.2f ...' % self.spanpos)
+            elif self.exec_mode in ['matlab', 'octave']:
+                self.execute_shell()
+            self.success = True
+        except:
+            if self.hawc2_FPM:
+                self.cs_props = np.zeros(30)
+            else:
+                self.cs_props = np.zeros(19)
+            self.cs_props[1] = 1.e6
+          # self.max_failure.cases = np.zeros(len(self.load_cases.cases))
+            self.success = False
 
         print ' BECAS calculation time: % 10.6f seconds' % (time.time() - tt)
         # self._logger.info(' BECAS calculation time: % 10.6f seconds' % (time.time() - tt))
