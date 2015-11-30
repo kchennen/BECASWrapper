@@ -250,6 +250,7 @@ class Slice(Component):
             self.add_param('DP%02d' % i, DPs[:, i])
 
         self.add_param('blade_surface_norm_st', np.zeros(sdim))
+        self.add_param('blade_length', 0.)
 
         vsize = 0
         self._varnames = []
@@ -279,7 +280,8 @@ class Slice(Component):
             for j in range(self.nDP):
                 DPs[j] = params['DP%02d' % j][i]
             unknowns['sec%03d:DPs' % i] = DPs
-            unknowns['sec%03d:coords' % i] = params['blade_surface_norm_st'][:, i, :]
+            unknowns['sec%03d:coords' % i] = params['blade_surface_norm_st'][:, i, :] * \
+                                             params['blade_length']
             for ii, name in enumerate(self._varnames):
                 unknowns['sec%03d:tvec' % i][ii] = params[name + 'T'][i]
                 unknowns['sec%03d:tvec' % i][nvar+ii] = params[name + 'A'][i]
