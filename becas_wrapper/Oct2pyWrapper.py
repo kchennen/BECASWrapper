@@ -11,6 +11,7 @@ import numpy as np
 from oct2py import octave
 import unittest
 import six
+import os
 
 ## ===========================================================================
 #PY2 = sys.version[0] == '2'
@@ -96,8 +97,9 @@ class OctavePythonRoundtripTests(unittest.TestCase):
         # make sure we have a fresh new and clean octave session
         octave.restart()
         
-        p_becas = '/home/dave/Repositories/DTU/BECAS/src/matlab'
-        exampl = 'BECAS_examples/WTAirfoil'
+        p_becas = os.environ['BECAS_BASEDIR']
+        print(p_becas)
+        exampl = 'examples/WTAirfoil'
         
         # load the input files with Python
         nl_2d = np.loadtxt('%s/%s/N2D.in' % (p_becas, exampl))
