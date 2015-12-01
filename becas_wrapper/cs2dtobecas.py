@@ -24,7 +24,7 @@ class CS2DtoBECAS(object):
         dictionary of model specific inputs
     cs2d: dict
         dictionary containing coordinates and materials
-    path_shellexpander: str
+    path_shellexpander: str (deprecated)
         Absolute path to shellexpander.py
     total_points: int
         Number of total geometry points to define the shape of the cross-section
@@ -54,7 +54,7 @@ class CS2DtoBECAS(object):
 
     def __init__(self, cs2d, **kwargs):
 
-        self.path_shellexpander = ''
+        self.path_shellexpander = os.environ['SHELLEXP_BASEDIR']
 
         self.dry_run = False
         self.cs2d = cs2d
@@ -93,8 +93,8 @@ class CS2DtoBECAS(object):
 
         self.redistribute_flag = redistribute_flag
 
-        if self.path_shellexpander == '':
-            raise RuntimeError('path_shellexpander not specified')
+        if not os.path.exists(os.path.join(self.path_shellexpander, 'shellexpander.py')):
+            raise RuntimeError('Please define a valid absolute path to SHELLEXPANDER in SHELLEXP_BASEDIR environment variable')
 
         self.path_input = os.path.join(self.becas_inputs, self.section_name)
 
