@@ -13,8 +13,6 @@ from fusedwind.turbine.structure import read_bladestructure, \
 from becas_wrapper.becas_bladestructure import BECASBeamStructure
 from becas_wrapper.becas_stressrecovery import BECASStressRecovery
 
-user_home = os.getenv('HOME')
-
 beam_st_FPM = np.array([[  0.00000000000000000e+00,   1.19521193885999992e+03,
          -1.58887898064000009e-04,  -3.00944017198000006e-04,
           1.76131070914999999e+00,   1.83204131143000004e+00,
