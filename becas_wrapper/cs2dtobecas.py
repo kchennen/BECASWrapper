@@ -93,7 +93,7 @@ class CS2DtoBECAS(object):
 
         self.redistribute_flag = redistribute_flag
 
-        if not os.path.exists(os.path.join(self.path_shellexpander, 'shellexpander.py')):
+        if not os.path.exists(os.path.join(self.path_shellexpander, 'src', 'shellexpander.py')):
             raise RuntimeError('Please define a valid absolute path to SHELLEXPANDER in SHELLEXP_BASEDIR environment variable')
 
         self.path_input = os.path.join(self.becas_inputs, self.section_name)
@@ -628,7 +628,7 @@ class CS2DtoBECAS(object):
         if not self.dry_run:
             import imp
             shellexpander = imp.load_source('shellexpander',
-                              os.path.join(self.path_shellexpander, 'shellexpander.py'))
+                              os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
 
             shellexpander.main(args)
 
