@@ -6,13 +6,13 @@ The `BECASWrapper` package provides a Python interface between the cross-section
 
 BECAS, the BEam Cross section Analysis Software, determines cross section stiffness properties using a finite element based approach. BECAS handles arbitrary cross section geometries, any number of arbitrarily oriented anisotropic materials, and correctly accounts for all geometrical and material induced couplings (e.g. bend-twist coupling).
 
-BECAS is a licenced software, available free of charge for academic use, and available for commercial use for a small annual fee. For more information, see  http://www.becas.dtu.dk.
+BECAS is a licensed software, available free of charge for academic use, and available for commercial use for a small annual fee. For more information, see  http://www.becas.dtu.dk.
 
 This Python module facilitates using BECAS for evaluating blade structure beam properties based on a geometric definition of a blade given in the format defined in FUSED-Wind, and furthermore using the tool in an aero-structural blade optimization context when interfaced with with an aeroelastic code, e.g. HAWC2 or FAST.
 
 ## Dependencies and Installation
 
-In addition to BECAS itself the BECAS wrapper has the following requirements:
+In addition to BECAS  and shellexpander itself the BECAS wrapper has the following requirements:
 
 * Python 2.7.x
 * numpy, scipy, sphinx
@@ -33,6 +33,31 @@ or using pip:
 
     $ cd BECASWrapper
     $ pip install -e .
+    
+## Setting up environment variables
+
+BECASWrapper requires the paths to the BECAS and shellexpander source code.
+Therefore, system environment variables need to be added to the system's or user's `.profile` pointing to the folder according to the following examples.
+
+`BECAS_BASEDIR` needs to point to the folder containing `src` and `examples`:
+
+    
+    BECAS_BASEDIR='$HOME/git/BECAS/'
+    export BECAS_BASEDIR
+
+`SHELLEXP_BASEDIR` needs to point to the folder containing `src`:
+
+
+    SHELLEXP_BASEDIR='$HOME/git/shellexpander/'
+    export BECAS_BASEDIR
+    
+Refresh your environment variables using:
+
+    $ source ~/.profile
+
+or if set on system's level:
+    
+    $ source /etc/profile
 
 ## Documentation and Tests
 
