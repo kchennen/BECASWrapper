@@ -6,6 +6,7 @@ import numpy as np
 import time
 import copy
 import commands
+import matplotlib as mpl
 
 def ksfunc(p, rho=50., side=1.):
     """
@@ -464,7 +465,7 @@ class BECASWrapper(object):
         self.csprops      = self.octave.get('csprops')
         self.constitutive = self.octave.get('constitutive')
         if self. checkmesh:
-            self.meshcheck    = octave.get('meshcheck')
+            self.meshcheck    = self.octave.get('meshcheck')
 #        self.options      = octave.get('options')
 #        self.solutions    = octave.get('solutions')
 #        self.strain       = octave.get('strain')
