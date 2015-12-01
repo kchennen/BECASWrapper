@@ -185,12 +185,10 @@ def configure(nsec, dry_run=False, FPM=False, with_sr=False):
     config = {}
     cfg = {}
     cfg['dry_run'] = dry_run
-    cfg['path_shellexpander'] = os.path.join(user_home, 'git/BECAS_stable/shellexpander/src')
     cfg['dominant_elsets'] = ['REGION04', 'REGION08']
     cfg['max_layers'] = 0
     config['CS2DtoBECAS'] = cfg
     cfg = {}
-    cfg['path_becas'] = os.path.join(user_home, 'git/BECAS_stable/BECAS/src/matlab')
     cfg['hawc2_FPM'] = FPM
     cfg['dry_run'] = dry_run
     cfg['analysis_mode'] = 'stiffness'
