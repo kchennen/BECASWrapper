@@ -137,7 +137,7 @@ from fusedwind.turbine.geometry import read_blade_planform,\
 
 
 
-def configure(nsec, dry_run=False, FPM=False, with_sr=False):
+def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
 
     p = Problem(impl=impl, root=Group())
 
@@ -225,9 +225,27 @@ class BECASWrapperTestCase(unittest.TestCase):
     #     p = configure(4, True)
     #     p.run()
 
-    def test_standard(self):
+    def test_standard_octave(self):
+        p = configure(4, 'octave', False, False)
+        p.run()
 
-        p = configure(4, False, False)
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'], beam_st, decimal=4), None)
+
+        self.assertAlmostEqual(p['blade_mass'], 42499.350315582917, places=6)
+        self.assertAlmostEqual(p['blade_mass_moment'], 10670946.166707618, places=6)
+
+
+        # when hooked up to a constraint these outputs ought to be
+        # available on all procs
+        if not MPI:
+
+            self.assertAlmostEqual(p['blade_failure_index_sec000'][0], 0.17026370426021892, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec001'][0], 0.16552789587300576, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
+    
+    def test_standard_matlab(self):
+        p = configure(4, 'matlab', False, False)
         p.run()
 
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'], beam_st, decimal=4), None)
@@ -245,7 +263,7 @@ class BECASWrapperTestCase(unittest.TestCase):
             self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
 
-
+    
     # def test_FPM(self):
     #
     #     p = configure(4, False, True)
