@@ -222,8 +222,6 @@ class BECASWrapperTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    # add some tests here...
-
     # def test_dry_run(self):
     #
     #     p = configure(4, True)
@@ -234,10 +232,10 @@ class BECASWrapperTestCase(unittest.TestCase):
         p = configure(4, False, False)
         p.run()
 
-        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'], beam_st, decimal=4), None)
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
 
-        self.assertAlmostEqual(p['blade_mass'], 42499.350315582917, places=6)
-        self.assertAlmostEqual(p['blade_mass_moment'], 10670946.166707618, places=6)
+        self.assertAlmostEqual(p['blade_mass']/42499.350315582917, 1.e0, places=6)
+        self.assertAlmostEqual(p['blade_mass_moment']/10670946.166707618, 1.e0, places=6)
 
 
         # when hooked up to a constraint these outputs ought to be
