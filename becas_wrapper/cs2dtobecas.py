@@ -538,8 +538,9 @@ class CS2DtoBECAS(object):
                 text = '*SHELL SECTION, ELSET=%s, COMPOSITE, OFFSET=%3.3f\n'
                 f.write(text % (r_name, offset))
                 for il, l_name in enumerate(r['layers']):
-
-                    materialname = l_name.translate(None, digits).lower()
+                    #materialname = l_name.translate(None, digits).lower()
+                    # remove last two digits from the name, lower case is not required
+                    materialname = l_name[:-2]
                     m_ix = self.cs2d['materials'][materialname]
                     if self.cs2d['failcrit'][m_ix] == 'maximum_stress':
                         mname = materialname + 'MAXSTRESS'
