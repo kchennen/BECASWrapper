@@ -12,6 +12,9 @@ from fusedwind.turbine.structure import read_bladestructure, \
                                         SplinedBladeStructure
 from becas_wrapper.becas_bladestructure import BECASBeamStructure
 from becas_wrapper.becas_stressrecovery import BECASStressRecovery
+from distutils.spawn import find_executable
+
+_matlab_installed = find_executable('matlab')
 
 beam_st_FPM = np.array([[  0.00000000000000000e+00,   1.19521193885999992e+03,
          -1.58887898064000009e-04,  -3.00944017198000006e-04,
@@ -227,10 +230,10 @@ class BECASWrapperTestCase(unittest.TestCase):
         p = configure(4, 'octave', False, False)
         p.run()
 
-        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'], beam_st, decimal=4), None)
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
 
-        self.assertAlmostEqual(p['blade_mass'], 42499.350315582917, places=6)
-        self.assertAlmostEqual(p['blade_mass_moment'], 10670946.166707618, places=6)
+        self.assertAlmostEqual(p['blade_mass']/42499.350315582917, 1.e0, places=6)
+        self.assertAlmostEqual(p['blade_mass_moment']/10670946.166707618, 1.e0, places=6)
 
 
         # when hooked up to a constraint these outputs ought to be
@@ -242,6 +245,8 @@ class BECASWrapperTestCase(unittest.TestCase):
             self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
     
+    @unittest.skipIf(not _matlab_installed,
+                 "Matlab not available on this system")
     def test_standard_matlab(self):
         p = configure(4, 'matlab', False, False)
         p.run()
