@@ -176,8 +176,8 @@ def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
 
     spl = p.root.add('st_splines', SplinedBladeStructure(st3dn), promotes=['*'])
     spl.add_spline('DP04', np.linspace(0, 1, 4), spline_type='bezier')
-    spl.add_spline('r04uniaxT', np.linspace(0, 1, 4), spline_type='bezier')
-    spl.add_spline('w02biaxT', np.linspace(0, 1, 4), spline_type='bezier')
+    spl.add_spline('r04uniax00T', np.linspace(0, 1, 4), spline_type='bezier')
+    spl.add_spline('w02biax00T', np.linspace(0, 1, 4), spline_type='bezier')
     spl.configure()
     # inputs to CS2DtoBECAS and BECASWrapper
     config = {}
