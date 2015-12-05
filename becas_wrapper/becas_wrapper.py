@@ -326,7 +326,7 @@ class BECASWrapper(object):
                     "addpath(genpath(fullfile('%s','BECAS_pre')))\n"
                     "addpath(genpath(fullfile('%s','BECAS_strength')))\n"
                     "addpath(genpath(fullfile('%s','BECAS_crack')))"
-                    "end\n"%(self.path_becas, self.path_becas, self.path_becas, self.path_becas,
+                    "\n"%(self.path_becas, self.path_becas, self.path_becas, self.path_becas,
                              self.path_becas, self.path_becas, self.path_becas, self.path_becas,
                              self.path_becas, self.path_becas))
 
