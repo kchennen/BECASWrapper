@@ -529,11 +529,15 @@ class CS2DtoBECAS(object):
             f.write('****************************\n')
             names = ['REGION%02d' % i for i in range(len(self.cs2d['regions']))]
             names.extend(['WEB%02d' % i for i in range(len(self.cs2d['webs']))])
+            offsets = ['top' for i in range(len(self.cs2d['regions']))]
+            offsets.extend(self.cs2d['web_offsets'])
             for i, r in enumerate(self.cs2d['regions'] + self.cs2d['webs']):
                 r_name = names[i]
-                if r_name.startswith('WEB'):
+                r_offset = offsets[i]
+                if r_offset=='mid':
+                #if r_name.startswith('WEB'):
                     offset = 0.0
-                else:
+                if r_offset=='top':
                     offset = -0.5
                 text = '*SHELL SECTION, ELSET=%s, COMPOSITE, OFFSET=%3.3f\n'
                 f.write(text % (r_name, offset))

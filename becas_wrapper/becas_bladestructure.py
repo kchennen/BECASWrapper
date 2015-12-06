@@ -90,6 +90,7 @@ class BECASCSStructure(Component):
         self.cs2di['failcrit'] = st3d['failcrit']
         self.cs2di['failmat'] = st3d['failmat']
         self.cs2di['web_def'] = st3d['web_def']
+        self.cs2di['web_offsets'] = st3d['web_offsets']
         self.cs2di['s'] = s
         self.cs2di['DPs'] = np.zeros(self.nr + 1)
         self.cs2di['regions'] = []
@@ -139,6 +140,7 @@ class BECASCSStructure(Component):
         # constants
         self.cs2d['s'] = self.cs2di['s']
         self.cs2d['web_def'] = self.cs2di['web_def']
+        self.cs2d['web_offsets'] = self.cs2di['web_offsets']
         self.cs2d['failcrit'] = self.cs2di['failcrit']
         self.cs2d['materials'] = self.cs2di['materials']
 
