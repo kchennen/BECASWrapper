@@ -635,7 +635,8 @@ class CS2DtoBECAS(object):
             shellexpander = imp.load_source('shellexpander',
                               os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
 
-            shellexpander.main(args)
+            becas_elements = shellexpander.main(args)
+            print('')
 
     def output_te_ratio(self):
         """
