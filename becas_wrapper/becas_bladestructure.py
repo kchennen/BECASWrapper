@@ -1,12 +1,8 @@
 
 import numpy as np
-import time
 import os
-from collections import OrderedDict
-from scipy.interpolate import pchip
 
 from openmdao.api import Component, Group, ParallelGroup, ExecComp
-from openmdao.api import IndepVarComp
 
 from cs2dtobecas import CS2DtoBECAS
 from becas_wrapper import BECASWrapper

@@ -12,8 +12,9 @@ from fusedwind.turbine.structure import read_bladestructure, \
                                         SplinedBladeStructure
 from becas_wrapper.becas_bladestructure import BECASBeamStructure
 from becas_wrapper.becas_stressrecovery import BECASStressRecovery
+from distutils.spawn import find_executable
 
-user_home = os.getenv('HOME')
+_matlab_installed = find_executable('matlab')
 
 beam_st_FPM = np.array([[  0.00000000000000000e+00,   1.19521193885999992e+03,
          -1.58887898064000009e-04,  -3.00944017198000006e-04,
@@ -139,7 +140,7 @@ from fusedwind.turbine.geometry import read_blade_planform,\
 
 
 
-def configure(nsec, dry_run=False, FPM=False, with_sr=False):
+def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
 
     p = Problem(impl=impl, root=Group())
 
@@ -178,19 +179,17 @@ def configure(nsec, dry_run=False, FPM=False, with_sr=False):
 
     spl = p.root.add('st_splines', SplinedBladeStructure(st3dn), promotes=['*'])
     spl.add_spline('DP04', np.linspace(0, 1, 4), spline_type='bezier')
-    spl.add_spline('r04uniaxT', np.linspace(0, 1, 4), spline_type='bezier')
-    spl.add_spline('w02biaxT', np.linspace(0, 1, 4), spline_type='bezier')
+    spl.add_spline('r04uniax00T', np.linspace(0, 1, 4), spline_type='bezier')
+    spl.add_spline('w02biax00T', np.linspace(0, 1, 4), spline_type='bezier')
     spl.configure()
     # inputs to CS2DtoBECAS and BECASWrapper
     config = {}
     cfg = {}
     cfg['dry_run'] = dry_run
-    cfg['path_shellexpander'] = os.path.join(user_home, 'git/BECAS_stable/shellexpander/src')
     cfg['dominant_elsets'] = ['REGION04', 'REGION08']
     cfg['max_layers'] = 0
     config['CS2DtoBECAS'] = cfg
     cfg = {}
-    cfg['path_becas'] = os.path.join(user_home, 'git/BECAS_stable/BECAS/src/matlab')
     cfg['hawc2_FPM'] = FPM
     cfg['dry_run'] = dry_run
     cfg['analysis_mode'] = 'stiffness'
@@ -227,9 +226,29 @@ class BECASWrapperTestCase(unittest.TestCase):
     #     p = configure(4, True)
     #     p.run()
 
-    def test_standard(self):
+    def test_standard_octave(self):
+        p = configure(4, 'octave', False, False)
+        p.run()
 
-        p = configure(4, False, False)
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
+
+        self.assertAlmostEqual(p['blade_mass']/42499.350315582917, 1.e0, places=6)
+        self.assertAlmostEqual(p['blade_mass_moment']/10670946.166707618, 1.e0, places=6)
+
+
+        # when hooked up to a constraint these outputs ought to be
+        # available on all procs
+        if not MPI:
+
+            self.assertAlmostEqual(p['blade_failure_index_sec000'][0], 0.17026370426021892, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec001'][0], 0.16552789587300576, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
+    
+    @unittest.skipIf(not _matlab_installed,
+                 "Matlab not available on this system")
+    def test_standard_matlab(self):
+        p = configure(4, 'matlab', False, False)
         p.run()
 
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
@@ -247,7 +266,7 @@ class BECASWrapperTestCase(unittest.TestCase):
             self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
 
-
+    
     # def test_FPM(self):
     #
     #     p = configure(4, False, True)

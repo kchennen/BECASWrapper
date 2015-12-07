@@ -4,8 +4,8 @@ __all__ = ['BECASWrapper']
 import os
 import numpy as np
 import time
-import copy
 import commands
+import matplotlib as mpl
 
 def ksfunc(p, rho=50., side=1.):
     """
@@ -44,7 +44,7 @@ class BECASWrapper(object):
         or to recover stresses or both.
     utils_rst_filebase: str
         file base name for mat files saved with BECAS utils. Default 'becas_utils'.
-    path_becas: str
+    path_becas: str (deprecated)
         absolute path to BECAS source files
     timeout: float
         timeout of BECAS call (only used in Oct2Py mode)
@@ -129,7 +129,7 @@ class BECASWrapper(object):
         self.exec_mode = 'octave'
         self.analysis_mode = 'stiffness'
         self.utils_rst_filebase = 'becas_utils'
-        self.path_becas = ''
+        self.path_becas = os.path.join(os.environ['BECAS_BASEDIR'], 'src', 'matlab')
         self.timeout = 180.
         self.path_input = 'becas_inputs/BECAS_SECTION%3.3f' % spanpos
         self.path_plots = 'plots'
@@ -183,7 +183,7 @@ class BECASWrapper(object):
             else:
                 self.cs_props = np.zeros(19)
             self.cs_props[1] = 1.e6
-          # self.max_failure.cases = np.zeros(len(self.load_cases.cases))
+            # self.max_failure.cases = np.zeros(len(self.load_cases.cases))
             self.success = False
 
         print ' BECAS calculation time: % 10.6f seconds' % (time.time() - tt)
@@ -269,7 +269,7 @@ class BECASWrapper(object):
         out_str.append("OutputFilename='%s'; \n" % 'BECAS2HAWC2.out')
         out_str.append("utils.hawc2_flag=%s ;\n" % str(not self.hawc2_FPM).lower())
         out_str.append('BECAS_Becas2Hawc2(OutputFilename,RadialPosition,constitutive,csprops,utils)\n')
-        out_str.append("save('-hdf5', '%s', 'utils', 'solutions', 'csprops')\n" % self.utils_rst_filename)
+        out_str.append("save('%s', 'utils', 'solutions', 'csprops')\n" % self.utils_rst_filename)
 
         return out_str
 
@@ -326,7 +326,7 @@ class BECASWrapper(object):
                     "addpath(genpath(fullfile('%s','BECAS_pre')))\n"
                     "addpath(genpath(fullfile('%s','BECAS_strength')))\n"
                     "addpath(genpath(fullfile('%s','BECAS_crack')))"
-                    "end\n"%(self.path_becas, self.path_becas, self.path_becas, self.path_becas,
+                    "\n"%(self.path_becas, self.path_becas, self.path_becas, self.path_becas,
                              self.path_becas, self.path_becas, self.path_becas, self.path_becas,
                              self.path_becas, self.path_becas))
 
@@ -355,8 +355,8 @@ class BECASWrapper(object):
                 return False
 
         # check if the path to the BECAS program is properly defined
-        if self.path_becas is '':
-            msg = "path_becas is empty, please define a valid absolute path to BECAS"
+        if not os.path.exists(self.path_becas):
+            msg = "Please define a valid absolute path to BECAS in BECAS_BASEDIR environment variable"
             raise ValueError, msg
 
         # self._logger.info('executing BECAS ...')
@@ -464,7 +464,7 @@ class BECASWrapper(object):
         self.csprops      = self.octave.get('csprops')
         self.constitutive = self.octave.get('constitutive')
         if self. checkmesh:
-            self.meshcheck    = octave.get('meshcheck')
+            self.meshcheck    = self.octave.get('meshcheck')
 #        self.options      = octave.get('options')
 #        self.solutions    = octave.get('solutions')
 #        self.strain       = octave.get('strain')
