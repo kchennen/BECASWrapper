@@ -140,7 +140,7 @@ from fusedwind.turbine.geometry import read_blade_planform,\
 
 
 
-def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
+def configure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=False):
 
     p = Problem(impl=impl, root=Group())
 
@@ -172,7 +172,7 @@ def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
                                     size_out=(200, nsec_st, 3), suffix='_st'), promotes=['*'])
 
     # read the blade structure
-    st3d = read_bladestructure('data/DTU10MW')
+    st3d = read_bladestructure(os.path.join(path_data, 'DTU10MW'))
 
     # and interpolate onto new distribution
     st3dn = interpolate_bladestructure(st3d, s_st)
@@ -213,7 +213,7 @@ def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
 
     return p
 
-class BECASWrapperTestCase(unittest.TestCase):
+class BECASBladeStructureTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -227,7 +227,7 @@ class BECASWrapperTestCase(unittest.TestCase):
     #     p.run()
 
     def test_standard_octave(self):
-        p = configure(4, 'octave', False, False)
+        p = configure(4, 'octave', 'data', False, False)
         p.run()
 
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
@@ -245,10 +245,30 @@ class BECASWrapperTestCase(unittest.TestCase):
             self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
     
+    def test_standard_octave_data_version_1(self):
+        p = configure(4, 'octave', 'data_version_1', False, False)
+        p.run()
+
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
+
+        self.assertAlmostEqual(p['blade_mass']/42499.350315582917, 1.e0, places=6)
+        self.assertAlmostEqual(p['blade_mass_moment']/10670946.166707618, 1.e0, places=6)
+
+
+        # when hooked up to a constraint these outputs ought to be
+        # available on all procs
+        if not MPI:
+
+            self.assertAlmostEqual(p['blade_failure_index_sec000'][0], 0.17026370426021892, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec001'][0], 0.16552789587300576, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
+            self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
+    
+    
     @unittest.skipIf(not _matlab_installed,
                  "Matlab not available on this system")
     def test_standard_matlab(self):
-        p = configure(4, 'matlab', False, False)
+        p = configure(4, 'matlab', 'data', False, False)
         p.run()
 
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
