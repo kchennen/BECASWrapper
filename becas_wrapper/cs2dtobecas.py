@@ -38,6 +38,8 @@ class CS2DtoBECAS(object):
         Section name used by shellexpander, also by BECASWrapper
     dominant_elsets: list
         list of region names defining the spar cap regions for correct meshing
+    subelsets: list
+        list of region names by which the output mesh is reduced
     path_input: str
         path to the generated BECAS input files
     airfoil: array
@@ -63,7 +65,6 @@ class CS2DtoBECAS(object):
         self.open_te = False
         self.becas_inputs = 'becas_inputs'
         self.section_name = 'BECAS_SECTION%3.3f' % cs2d['s']
-        self.dom_regions = ['REGION04', 'REGION08']
 
         self.path_input = ''
         self.airfoil = np.array([])
@@ -629,14 +630,15 @@ class CS2DtoBECAS(object):
         args.centerline = None #--cline, string
         args.becasdir = self.becas_inputs #--bdir
         args.debug = False #--debug, if present switch to True
-
+        args.subelsets = self.subelsets
+        
         if not self.dry_run:
             import imp
             shellexpander = imp.load_source('shellexpander',
                               os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
 
-            becas_elements = shellexpander.main(args)
-            print('')
+            msh2d = shellexpander.main(args)
+            return msh2d
 
     def output_te_ratio(self):
         """
