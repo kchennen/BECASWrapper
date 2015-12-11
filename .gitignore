@@ -1,5 +1,6 @@
 /.project
 /.pydevproject
+/.settings
 /becas_wrapper.egg-info/
 /openmdao_log.txt
 /setup.pyc
