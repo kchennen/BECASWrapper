@@ -61,8 +61,6 @@ class CS2DtoBECAS(object):
 
     def __init__(self, cs2d, **kwargs):
 
-        self.path_shellexpander = os.environ['SHELLEXP_BASEDIR']
-
         self.dry_run = False
         self.cs2d = cs2d
         self.total_points = 100
