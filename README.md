@@ -4,7 +4,7 @@
 
 The `BECASWrapper` package provides a Python interface between the cross-sectional structure tool [BECAS](http://www.becas.dtu.dk) and [FUSED-Wind](http://fusedwind.org) which is built using [OpenMDAO](http://openmdao.org) as the underlying framework.
 
-BECAS, the BEam Cross section Analysis Software, determines cross section stiffness properties using a finite element based approach. BECAS handles arbitrary cross section geometries, any number of arbitrarily oriented anisotropic materials, and correctly accounts for all geometrical and material induced couplings (e.g. bend-twist coupling).
+BECAS, the BEam Cross section Analysis Software, determines cross section stiffness properties using a finite element based approach. BECAS handles arbitrary cross section geometries, any number of arbitrarily oriented anisotropic materials, and correctly accounts for all geometric and material induced couplings (e.g. bend-twist coupling).
 
 BECAS is a licensed software, available free of charge for academic use, and available for commercial use for a small annual fee. For more information, see  http://www.becas.dtu.dk.
 
@@ -51,13 +51,15 @@ Therefore, system environment variables need to be added to the system's or user
     SHELLEXP_BASEDIR='$HOME/git/shellexpander/'
     export BECAS_BASEDIR
     
-Refresh your environment variables using:
+Refresh your environment variables for verification using:
 
     $ source ~/.profile
 
 or if set on system's level:
     
     $ source /etc/profile
+    
+You need to re-login to load your environment variables permantly.
 
 ## Documentation and Tests
 

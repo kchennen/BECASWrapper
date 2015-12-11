@@ -38,6 +38,12 @@ class CS2DtoBECAS(object):
         Section name used by shellexpander, also by BECASWrapper
     dominant_elsets: list
         list of region names defining the spar cap regions for correct meshing
+    woffsets: List of web shell offset types
+            Example: ['mid', 'top'] means web00 is modelled as 'mid' offset and
+            web01 is modelled as top offset. The stacking direction depends on the
+            order of the DPs in iwebs.
+    subelsets: list
+        list of region names by which the output mesh is reduced
     path_input: str
         path to the generated BECAS input files
     airfoil: array
@@ -63,7 +69,7 @@ class CS2DtoBECAS(object):
         self.open_te = False
         self.becas_inputs = 'becas_inputs'
         self.section_name = 'BECAS_SECTION%3.3f' % cs2d['s']
-        self.dom_regions = ['REGION04', 'REGION08']
+        self.subelsets = []
 
         self.path_input = ''
         self.airfoil = np.array([])
@@ -75,7 +81,7 @@ class CS2DtoBECAS(object):
         self.el_3d = np.array([])
         self.te_ratio = 0.
         self.thickness_ratio = np.array([])
-
+        
 
         for k, w in kwargs.iteritems():
             try:
@@ -529,11 +535,15 @@ class CS2DtoBECAS(object):
             f.write('****************************\n')
             names = ['REGION%02d' % i for i in range(len(self.cs2d['regions']))]
             names.extend(['WEB%02d' % i for i in range(len(self.cs2d['webs']))])
+            offsets = ['top' for i in range(len(self.cs2d['regions']))]
+            offsets.extend(self.web_offsets)
             for i, r in enumerate(self.cs2d['regions'] + self.cs2d['webs']):
                 r_name = names[i]
-                if r_name.startswith('WEB'):
+                r_offset = offsets[i]
+                if r_offset=='mid':
+                #if r_name.startswith('WEB'):
                     offset = 0.0
-                else:
+                if r_offset=='top':
                     offset = -0.5
                 text = '*SHELL SECTION, ELSET=%s, COMPOSITE, OFFSET=%3.3f\n'
                 f.write(text % (r_name, offset))
@@ -625,13 +635,15 @@ class CS2DtoBECAS(object):
         args.centerline = None #--cline, string
         args.becasdir = self.becas_inputs #--bdir
         args.debug = False #--debug, if present switch to True
-
+        args.subelsets = self.subelsets
+        
         if not self.dry_run:
             import imp
             shellexpander = imp.load_source('shellexpander',
                               os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
 
-            shellexpander.main(args)
+            msh2d = shellexpander.main(args)
+            return msh2d
 
     def output_te_ratio(self):
         """
