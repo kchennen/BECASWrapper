@@ -37,7 +37,7 @@ or using pip:
 ## Setting up environment variables
 
 BECASWrapper requires the path to the BECAS source code.
-Therefore, system environment variables need to be added to the system's or user's `.profile` pointing to the folder according to the following examples.
+Therefore, a system environment variable needs to be added to the system's or user's `.profile` pointing to the folder according to the following examples.
 
 `BECAS_BASEDIR` needs to point to the folder containing `src` and `examples`:
 
