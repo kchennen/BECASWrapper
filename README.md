@@ -36,19 +36,13 @@ or using pip:
     
 ## Setting up environment variables
 
-BECASWrapper requires the paths to the BECAS and shellexpander source code.
+BECASWrapper requires the path to the BECAS source code.
 Therefore, system environment variables need to be added to the system's or user's `.profile` pointing to the folder according to the following examples.
 
 `BECAS_BASEDIR` needs to point to the folder containing `src` and `examples`:
 
     
     BECAS_BASEDIR='$HOME/git/BECAS/'
-    export BECAS_BASEDIR
-
-`SHELLEXP_BASEDIR` needs to point to the folder containing `src`:
-
-
-    SHELLEXP_BASEDIR='$HOME/git/shellexpander/'
     export BECAS_BASEDIR
     
 Refresh your environment variables for verification using:
