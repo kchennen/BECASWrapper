@@ -146,7 +146,7 @@ def configure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=Fals
 
     p.root.add('blade_length_c', IndepVarComp('blade_length', 86.366), promotes=['*'])
 
-    pf = read_blade_planform('data/DTU_10MW_RWT_blade_axis_prebend.dat')
+    pf = read_blade_planform(os.path.join(path_data,'DTU_10MW_RWT_blade_axis_prebend.dat'))
     nsec_ae = 50
     nsec_st = nsec
     s_ae = np.linspace(0, 1, nsec_ae)
@@ -187,6 +187,7 @@ def configure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=Fals
     cfg = {}
     cfg['dry_run'] = dry_run
     cfg['dominant_elsets'] = ['REGION04', 'REGION08']
+    cfg['web_offsets'] = ['mid', 'mid', 'mid', 'mid']
     cfg['max_layers'] = 0
     config['CS2DtoBECAS'] = cfg
     cfg = {}
