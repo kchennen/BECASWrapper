@@ -532,7 +532,7 @@ class CS2DtoBECAS(object):
             names = ['REGION%02d' % i for i in range(len(self.cs2d['regions']))]
             names.extend(['WEB%02d' % i for i in range(len(self.cs2d['webs']))])
             offsets = ['top' for i in range(len(self.cs2d['regions']))]
-            offsets.extend(self.web_offsets)
+            offsets.extend(self.woffsets)
             for i, r in enumerate(self.cs2d['regions'] + self.cs2d['webs']):
                 r_name = names[i]
                 r_offset = offsets[i]
