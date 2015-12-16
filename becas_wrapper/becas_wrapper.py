@@ -9,9 +9,6 @@ import subprocess
 import matplotlib as mpl
 import scipy.io.matlab as spio
 
-
-import scipy.io.matlab as spio
-
 def ksfunc(p, rho=50., side=1.):
     """
     Kreisselmeier and Steinhauser constraint aggregation function
