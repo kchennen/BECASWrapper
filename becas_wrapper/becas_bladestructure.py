@@ -588,8 +588,8 @@ class PostprocessCSKM(Component):
         """
         
         for i in range(nsec):
-            self.add_param('k_matrix%03d' % i, shape=(6,6), desc='cross-sectional props for sec%03d' % i)
-            self.add_param('m_matrix%03d' % i, shape=(6,6), desc='cross-sectional props for sec%03d' % i)
+            self.add_param('k_matrix%03d' % i, shape=(6,6), desc='stiffness matrix for sec%03d' % i)
+            self.add_param('m_matrix%03d' % i, shape=(6,6), desc='mass matrix for sec%03d' % i)
             
         self.add_output('MStruct', shape=(6,6,nsec))    
         self.add_output('KStruct', shape=(6,6,nsec))    
