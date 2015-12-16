@@ -115,8 +115,10 @@ class BECASWrapper(object):
     csprops: array
         contains the values according to the keys as stored in BECAS csprops dict, size (19):
         ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
-        AreaY Axx Ayy Axy AreaTotal MassPerMaterial AlphaPrincipleAxis_Ref 
+        AreaY Axx Ayy Axy AreaTotal AlphaPrincipleAxis_Ref 
         AlphaPrincipleAxis_ElasticCenter
+    masspermaterial: array
+        contains MassPerMaterial as of BECAS csprops key MassPerMaterial
     k_matrix: array
         stiffness matrix w.r.t reference coordinate system.
           | size(6,6):
@@ -177,6 +179,7 @@ class BECASWrapper(object):
         self.cs_props[0] = spanpos
         
         self.csprops = np.array([])
+        self.masspermaterial = np.array([])
         self.k_matrix = np.array([])
         self.m_matrix = np.array([])
 
@@ -378,10 +381,12 @@ class BECASWrapper(object):
         for k in strc.dtype.names:
             if k == 'MassPerMaterial':
                 # skipped because array needs to be flat
-                v = 0
+                pass
             else:
                 v = strc[k]
-            self.csprops = np.append(self.csprops,v)
+                self.csprops = np.append(self.csprops,v)
+                
+        self.masspermaterial = rst['csprops']['MassPerMaterial']
         
         matmatrix = spio.loadmat(self.utils_rst_filename, squeeze_me=True, struct_as_record=False)  
         self.k_matrix = matmatrix['constitutive'].Ks
