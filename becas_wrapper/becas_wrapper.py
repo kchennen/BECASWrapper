@@ -7,6 +7,8 @@ import time
 import commands
 import matplotlib as mpl
 
+import scipy.io.matlab as spio
+
 def ksfunc(p, rho=50., side=1.):
     """
     Kreisselmeier and Steinhauser constraint aggregation function
@@ -110,6 +112,11 @@ class BECASWrapper(object):
           | Fully populated stiffness matrix, size (30):
           | s dm x_cg y_cg ri_x ri_y pitch x_e y_e K_11 K_12 K_13 K_14 K_15 K_16 K_22
           | K_23 K_24 K_25 K_26 K_33 K_34 K_35 K_36 K_44 K_45 K_46 K_55 K_56 K_66
+    csprops: array
+        contains the values according to the keys as stored in BECAS csprops dict, size (19):
+        ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
+        AreaY Axx Ayy Axy AreaTotal MassPerMaterial AlphaPrincipleAxis_Ref 
+        AlphaPrincipleAxis_ElasticCenter
     stress: array
         stresses in each node
     strain: array
@@ -157,6 +164,8 @@ class BECASWrapper(object):
             self.cs_size = 19
             self.cs_props = np.zeros(19)
         self.cs_props[0] = spanpos
+        
+        self.csprops = np.array([])
 
         self.stress = np.array([])
         self.strain = np.array([])
@@ -244,6 +253,8 @@ class BECASWrapper(object):
             self.max_failure_ks = np.array(ks_failure)
             # except:
             #     pass
+            
+        self.get_out_vars()
 
     def add_utils(self, out_str):
 
@@ -333,6 +344,23 @@ class BECASWrapper(object):
         fid = open('BECAS_SetupPath.m','w')
         fid.write(setup_path)
         fid.close()
+        
+    def get_out_vars(self):
+        """
+        Obtain all BECAS output variables and store into arrays
+        """
+        rst = spio.loadmat(self.utils_rst_filename, squeeze_me=True)
+        # iterate over structured numpy array
+        strc = rst['csprops']
+        for k in strc.dtype.names:
+            if k == 'MassPerMaterial':
+                # skipped because array needs to be flat
+                v = 0
+            else:
+                v = strc[k]
+            self.csprops = np.append(self.csprops,v)
+        
+        
 
     def execute_oct2py(self):
         """
