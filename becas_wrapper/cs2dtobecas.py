@@ -10,8 +10,6 @@ try:
 except:
     _PGL_installed = False
 
-import shellexpander.shellexpander as shellexp
-
 class CS2DtoBECAS(object):
     """
     Component that generates a set of BECAS input files based on
@@ -60,7 +58,8 @@ class CS2DtoBECAS(object):
     """
 
     def __init__(self, cs2d, **kwargs):
-
+        self.path_shellexpander = os.environ['SHELLEXP_BASEDIR']
+        
         self.dry_run = False
         self.cs2d = cs2d
         self.total_points = 100
@@ -634,9 +633,20 @@ class CS2DtoBECAS(object):
         args.subelsets = self.subelsets
         
         if not self.dry_run:
-            shellexp_sections = shellexp.main(args)
-            msh2d = shellexp_sections[args.sections]
-            return msh2d
+            try: #shellexpander >1.5
+                import shellexpander
+                if shellexpander.__version__:
+                    from shellexpander import shellexpander
+                    shellexp_sections = shellexpander.main(args)
+                    msh2d = shellexp_sections[args.sections]
+                    return msh2d
+            except:
+                import imp
+                shellexpander = imp.load_source('shellexpander',
+                              os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
+
+                shellexpander.main(args)
+                
 
     def output_te_ratio(self):
         """
