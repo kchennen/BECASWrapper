@@ -10,6 +10,8 @@ import matplotlib as mpl
 import scipy.io.matlab as spio
 
 
+import scipy.io.matlab as spio
+
 def ksfunc(p, rho=50., side=1.):
     """
     Kreisselmeier and Steinhauser constraint aggregation function
@@ -123,6 +125,11 @@ class BECASWrapper(object):
           | size(21):
           | M_11 M_12 M_13 M_14 M_15 M_16 M_22 M_23 M_24 M_25 M_26 M_33 M_34 M_35 M_36 
           | M_44 M_45 M_46 M_55 M_56 M_66 
+    csprops: array
+        contains the values according to the keys as stored in BECAS csprops dict, size (19):
+        ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
+        AreaY Axx Ayy Axy AreaTotal MassPerMaterial AlphaPrincipleAxis_Ref 
+        AlphaPrincipleAxis_ElasticCenter
     stress: array
         stresses in each node
     strain: array
@@ -174,6 +181,8 @@ class BECASWrapper(object):
         
         self.k_matrix = np.array([])
         self.m_matrix = np.array([])
+        self.csprops = np.array([])
+
         self.stress = np.array([])
         self.strain = np.array([])
         self.max_failure = np.array([])
@@ -270,6 +279,8 @@ class BECASWrapper(object):
             # except:
             #     pass
 
+        self.get_out_vars()
+
     def add_utils(self, out_str):
 
         out_str.append('[ utils ] = BECAS_Utils( options );\n')
@@ -362,6 +373,23 @@ class BECASWrapper(object):
         fid = open('BECAS_SetupPath.m','w')
         fid.write(setup_path)
         fid.close()
+
+    def get_out_vars(self):
+        """
+        Obtain all BECAS output variables and store into arrays
+        """
+        rst = spio.loadmat(self.utils_rst_filename, squeeze_me=True)
+        # iterate over structured numpy array
+        strc = rst['csprops']
+        for k in strc.dtype.names:
+            if k == 'MassPerMaterial':
+                # skipped because array needs to be flat
+                v = 0
+            else:
+                v = strc[k]
+            self.csprops = np.append(self.csprops,v)
+        
+        
 
     def execute_oct2py(self):
         """
