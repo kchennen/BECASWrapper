@@ -194,7 +194,7 @@ def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
     cfg['dry_run'] = dry_run
     cfg['exec_mode'] = exec_mode
     cfg['analysis_mode'] = 'stiffness'
-    cfg['debug_mode'] = True
+    cfg['debug_mode'] = False
     config['BECASWrapper'] = cfg
 
     p.root.add('stiffness', BECASBeamStructure(p.root, config, st3dn, (200, nsec_st, 3)), promotes=['*'])
