@@ -192,7 +192,9 @@ def configure(nsec, exec_mode, dry_run=False, FPM=False, with_sr=False):
     cfg = {}
     cfg['hawc2_FPM'] = FPM
     cfg['dry_run'] = dry_run
+    cfg['exec_mode'] = exec_mode
     cfg['analysis_mode'] = 'stiffness'
+    cfg['debug_mode'] = True
     config['BECASWrapper'] = cfg
 
     p.root.add('stiffness', BECASBeamStructure(p.root, config, st3dn, (200, nsec_st, 3)), promotes=['*'])
@@ -229,17 +231,17 @@ class BECASWrapperTestCase(unittest.TestCase):
     def test_standard_octave(self):
         p = configure(4, 'octave', False, False)
         p.run()
-
+ 
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
-
+ 
         self.assertAlmostEqual(p['blade_mass']/42499.350315582917, 1.e0, places=6)
         self.assertAlmostEqual(p['blade_mass_moment']/10670946.166707618, 1.e0, places=6)
-
-
+ 
+ 
         # when hooked up to a constraint these outputs ought to be
         # available on all procs
         if not MPI:
-
+ 
             self.assertAlmostEqual(p['blade_failure_index_sec000'][0], 0.17026370426021892, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec001'][0], 0.16552789587300576, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)

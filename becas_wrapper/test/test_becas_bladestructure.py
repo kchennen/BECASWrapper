@@ -38,6 +38,7 @@ def configure(nsec):
     cfg = {}
     cfg['exec_mode'] = 'octave'
     cfg['analysis_mode'] = 'stiffness'
+    cfg['debug_mode'] = True
     cfg['plot_paraview'] = False
     cfg['hawc2_FPM'] = False
     cfg['plot_paraview'] = False

@@ -5,8 +5,10 @@ import os
 import numpy as np
 import time
 import commands
+import subprocess
 import matplotlib as mpl
 import scipy.io.matlab as spio
+
 
 def ksfunc(p, rho=50., side=1.):
     """
@@ -139,6 +141,7 @@ class BECASWrapper(object):
         self.dry_run = False
         self.exec_mode = 'octave'
         self.analysis_mode = 'stiffness'
+        self.debug_mode = False
         self.utils_rst_filebase = 'becas_utils'
         self.path_becas = os.path.join(os.environ['BECAS_BASEDIR'], 'src', 'matlab')
         self.timeout = 180.
@@ -232,10 +235,16 @@ class BECASWrapper(object):
 
         if not self.dry_run:
             if self.exec_mode == 'octave':
-                out = commands.getoutput('octave becas_section.m')
+                if self.debug_mode:
+                    out = subprocess.call(["octave", "becas_section.m"])
+                else:
+                    out = commands.getoutput('octave becas_section.m')
 
             elif self.exec_mode == 'matlab':
-                out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
+                if self.debug_mode:
+                    out = subprocess.call(["matlab", "-nosplash", "-nodesktop", "-nojvm", "-r", "becas_section"])
+                else:
+                    out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
             # print out
             # self._logger.info(out)
 
