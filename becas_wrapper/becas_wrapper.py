@@ -294,7 +294,11 @@ class BECASWrapper(object):
         out_str.append("OutputFilename='%s'; \n" % 'BECAS2HAWC2.out')
         out_str.append("utils.hawc2_flag=%s ;\n" % str(not self.hawc2_FPM).lower())
         out_str.append('BECAS_Becas2Hawc2(OutputFilename,RadialPosition,constitutive,csprops,utils)\n')
-        out_str.append("save('%s', 'utils', 'solutions', 'csprops', 'constitutive')\n" % self.utils_rst_filename)
+        
+        if self.exec_mode == 'octave':
+            out_str.append("save('-v7', '%s', 'utils', 'solutions', 'csprops', 'constitutive')\n" % self.utils_rst_filename)
+        else:
+            out_str.append("save('%s', 'utils', 'solutions', 'csprops', 'constitutive')\n" % self.utils_rst_filename)
 
         return out_str
 
