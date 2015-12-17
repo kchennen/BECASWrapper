@@ -5,7 +5,9 @@ import os
 import numpy as np
 import time
 import commands
+import subprocess
 import matplotlib as mpl
+import scipy.io.matlab as spio
 
 def ksfunc(p, rho=50., side=1.):
     """
@@ -110,6 +112,23 @@ class BECASWrapper(object):
           | Fully populated stiffness matrix, size (30):
           | s dm x_cg y_cg ri_x ri_y pitch x_e y_e K_11 K_12 K_13 K_14 K_15 K_16 K_22
           | K_23 K_24 K_25 K_26 K_33 K_34 K_35 K_36 K_44 K_45 K_46 K_55 K_56 K_66
+    csprops: array
+        contains the values according to the keys as stored in BECAS csprops dict, size (18):
+        ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
+        AreaY Axx Ayy Axy AreaTotal AlphaPrincipleAxis_Ref 
+        AlphaPrincipleAxis_ElasticCenter
+    masspermaterial: array 
+        contains the mass per material as stored in BECAS csprops key MassPerMaterial
+    k_matrix: array
+        stiffness matrix w.r.t reference coordinate system.
+          | size(6,6):
+          | K_11 K_12 K_13 K_14 K_15 K_16 K_22 K_23 K_24 K_25 K_26 K_33 K_34 K_35 K_36 
+          | K_44 K_45 K_46 K_55 K_56 K_66 
+    m_matrix: array
+        mass matrix w.r.t reference coordinate system.
+          | size(6,6):
+          | M_11 M_12 M_13 M_14 M_15 M_16 M_22 M_23 M_24 M_25 M_26 M_33 M_34 M_35 M_36 
+          | M_44 M_45 M_46 M_55 M_56 M_66
     stress: array
         stresses in each node
     strain: array
@@ -128,6 +147,7 @@ class BECASWrapper(object):
         self.dry_run = False
         self.exec_mode = 'octave'
         self.analysis_mode = 'stiffness'
+        self.debug_mode = False
         self.utils_rst_filebase = 'becas_utils'
         self.path_becas = os.path.join(os.environ['BECAS_BASEDIR'], 'src', 'matlab')
         self.timeout = 180.
@@ -157,6 +177,12 @@ class BECASWrapper(object):
             self.cs_size = 19
             self.cs_props = np.zeros(19)
         self.cs_props[0] = spanpos
+        
+        self.csprops = np.array([])
+        self.masspermaterial = np.array([])
+        
+        self.k_matrix = np.array([])
+        self.m_matrix = np.array([])
 
         self.stress = np.array([])
         self.strain = np.array([])
@@ -219,10 +245,16 @@ class BECASWrapper(object):
 
         if not self.dry_run:
             if self.exec_mode == 'octave':
-                out = commands.getoutput('octave becas_section.m')
+                if self.debug_mode:
+                    out = subprocess.call(["octave", "becas_section.m"])
+                else:
+                    out = commands.getoutput('octave becas_section.m')
 
             elif self.exec_mode == 'matlab':
-                out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
+                if self.debug_mode:
+                    out = subprocess.call(["matlab", "-nosplash", "-nodesktop", "-nojvm", "-r", "becas_section"])
+                else:
+                    out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
             # print out
             # self._logger.info(out)
 
@@ -244,6 +276,8 @@ class BECASWrapper(object):
             self.max_failure_ks = np.array(ks_failure)
             # except:
             #     pass
+
+        self.get_out_vars()
 
     def add_utils(self, out_str):
 
@@ -269,7 +303,11 @@ class BECASWrapper(object):
         out_str.append("OutputFilename='%s'; \n" % 'BECAS2HAWC2.out')
         out_str.append("utils.hawc2_flag=%s ;\n" % str(not self.hawc2_FPM).lower())
         out_str.append('BECAS_Becas2Hawc2(OutputFilename,RadialPosition,constitutive,csprops,utils)\n')
-        out_str.append("save('%s', 'utils', 'solutions', 'csprops')\n" % self.utils_rst_filename)
+        
+        if self.exec_mode == 'octave':
+            out_str.append("save('-v7', '%s', 'utils', 'solutions', 'csprops', 'constitutive')\n" % self.utils_rst_filename)
+        else:
+            out_str.append("save('%s', 'utils', 'solutions', 'csprops', 'constitutive')\n" % self.utils_rst_filename)
 
         return out_str
 
@@ -333,6 +371,27 @@ class BECASWrapper(object):
         fid = open('BECAS_SetupPath.m','w')
         fid.write(setup_path)
         fid.close()
+
+    def get_out_vars(self):
+        """
+        Obtain all BECAS output variables and store into arrays
+        """
+        rst = spio.loadmat(self.utils_rst_filename, squeeze_me=True)
+        # iterate over structured numpy array
+        strc = rst['csprops']
+        for k in strc.dtype.names:
+            if k == 'MassPerMaterial':
+                # skipped because array needs to be flat
+                pass
+            else:
+                v = strc[k]
+                self.csprops = np.append(self.csprops,v)
+        self.masspermaterial = rst['csprops']['MassPerMaterial']
+        
+        matmatrix = spio.loadmat(self.utils_rst_filename, squeeze_me=True, struct_as_record=False)  
+        self.k_matrix = matmatrix['constitutive'].Ks
+        self.m_matrix = matmatrix['constitutive'].Ms
+         
 
     def execute_oct2py(self):
         """
