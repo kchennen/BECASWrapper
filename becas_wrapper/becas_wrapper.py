@@ -179,8 +179,6 @@ class BECASWrapper(object):
         self.cs_props[0] = spanpos
         
         self.csprops = np.array([])
-        
-        self.csprops = np.array([])
         self.masspermaterial = np.array([])
         
         self.k_matrix = np.array([])
@@ -279,8 +277,6 @@ class BECASWrapper(object):
             # except:
             #     pass
             
-        self.get_out_vars()
-
         self.get_out_vars()
 
     def add_utils(self, out_str):
