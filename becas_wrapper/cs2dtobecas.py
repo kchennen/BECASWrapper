@@ -81,7 +81,6 @@ class CS2DtoBECAS(object):
         self.el_3d = np.array([])
         self.te_ratio = 0.
         self.thickness_ratio = np.array([])
-        
 
         for k, w in kwargs.iteritems():
             try:
@@ -306,7 +305,8 @@ class CS2DtoBECAS(object):
         # by the node index.
         self.nodes = np.zeros( (nr_nodes, 3) )
         self.nodes[:nr_air_n,:2] = self.airfoil[:,:]
-        self.nodes[nr_air_n:,:2] = self.web_coord
+        if nr_web_n > 0:
+            self.nodes[nr_air_n:,:2] = self.web_coord
 
         # Elements are bounded by two neighbouring nodes. By closing the
         # circle (connecting the TE suction side with the pressure side), we
@@ -636,7 +636,7 @@ class CS2DtoBECAS(object):
         args.becasdir = self.becas_inputs #--bdir
         args.debug = False #--debug, if present switch to True
         args.subelsets = self.subelsets
-        
+
         if not self.dry_run:
             import imp
             shellexpander = imp.load_source('shellexpander',
