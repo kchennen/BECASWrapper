@@ -61,7 +61,7 @@ or if set on system's level:
     
     $ source /etc/profile
     
-You need to re-login to load your environment variables permantly.
+You need to re-login to load your environment variables permanently.
 
 ## Documentation and Tests
 
