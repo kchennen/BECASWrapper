@@ -187,10 +187,10 @@ def configure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=Fals
     cfg = {}
     cfg['dry_run'] = dry_run
     cfg['dominant_elsets'] = ['REGION04', 'REGION08']
-    cfg['web_offsets'] = ['mid', 'mid', 'mid', 'mid']
     cfg['max_layers'] = 0
     config['CS2DtoBECAS'] = cfg
     cfg = {}
+    cfg['exec_mode'] = exec_mode
     cfg['hawc2_FPM'] = FPM
     cfg['dry_run'] = dry_run
     cfg['exec_mode'] = exec_mode
