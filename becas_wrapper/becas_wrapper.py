@@ -117,6 +117,23 @@ class BECASWrapper(object):
         ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
         AreaY Axx Ayy Axy AreaTotal MassPerMaterial AlphaPrincipleAxis_Ref 
         AlphaPrincipleAxis_ElasticCenter
+    csprops: array
+        contains the values according to the keys as stored in BECAS csprops dict, size (18):
+        ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
+        AreaY Axx Ayy Axy AreaTotal AlphaPrincipleAxis_Ref 
+        AlphaPrincipleAxis_ElasticCenter
+    masspermaterial: array 
+        contains the mass per material as stored in BECAS csprops key MassPerMaterial
+    k_matrix: array
+        stiffness matrix w.r.t reference coordinate system.
+          | size(6,6):
+          | K_11 K_12 K_13 K_14 K_15 K_16 K_22 K_23 K_24 K_25 K_26 K_33 K_34 K_35 K_36 
+          | K_44 K_45 K_46 K_55 K_56 K_66 
+    m_matrix: array
+        mass matrix w.r.t reference coordinate system.
+          | size(6,6):
+          | M_11 M_12 M_13 M_14 M_15 M_16 M_22 M_23 M_24 M_25 M_26 M_33 M_34 M_35 M_36 
+          | M_44 M_45 M_46 M_55 M_56 M_66
     stress: array
         stresses in each node
     strain: array
@@ -166,6 +183,12 @@ class BECASWrapper(object):
         self.cs_props[0] = spanpos
         
         self.csprops = np.array([])
+        
+        self.csprops = np.array([])
+        self.masspermaterial = np.array([])
+        
+        self.k_matrix = np.array([])
+        self.m_matrix = np.array([])
 
         self.stress = np.array([])
         self.strain = np.array([])
