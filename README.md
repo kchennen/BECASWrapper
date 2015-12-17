@@ -45,7 +45,7 @@ Therefore, a system environment variable needs to be added to the system's or us
     BECAS_BASEDIR=$HOME/git/BECAS/
     export BECAS_BASEDIR
 
-If you are using shellexpander<=1.5, also the environmenat variable to this source code is required:
+If you are using shellexpander<=1.5, also the environment variable to this source code is required:
 
 `SHELLEXP_BASEDIR` needs to point to the folder containing `src`:
 
