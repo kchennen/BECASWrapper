@@ -5,8 +5,8 @@ import os
 import numpy as np
 import time
 import commands
+import subprocess
 import matplotlib as mpl
-
 import scipy.io.matlab as spio
 
 def ksfunc(p, rho=50., side=1.):
@@ -113,11 +113,6 @@ class BECASWrapper(object):
           | s dm x_cg y_cg ri_x ri_y pitch x_e y_e K_11 K_12 K_13 K_14 K_15 K_16 K_22
           | K_23 K_24 K_25 K_26 K_33 K_34 K_35 K_36 K_44 K_45 K_46 K_55 K_56 K_66
     csprops: array
-        contains the values according to the keys as stored in BECAS csprops dict, size (19):
-        ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
-        AreaY Axx Ayy Axy AreaTotal MassPerMaterial AlphaPrincipleAxis_Ref 
-        AlphaPrincipleAxis_ElasticCenter
-    csprops: array
         contains the values according to the keys as stored in BECAS csprops dict, size (18):
         ShearX ShearY ElasticX ElasticY MassTotal MassX MassY Ixx Iyy Ixy AreaX 
         AreaY Axx Ayy Axy AreaTotal AlphaPrincipleAxis_Ref 
@@ -152,6 +147,7 @@ class BECASWrapper(object):
         self.dry_run = False
         self.exec_mode = 'octave'
         self.analysis_mode = 'stiffness'
+        self.debug_mode = False
         self.utils_rst_filebase = 'becas_utils'
         self.path_becas = os.path.join(os.environ['BECAS_BASEDIR'], 'src', 'matlab')
         self.timeout = 180.
@@ -251,10 +247,16 @@ class BECASWrapper(object):
 
         if not self.dry_run:
             if self.exec_mode == 'octave':
-                out = commands.getoutput('octave becas_section.m')
+                if self.debug_mode:
+                    out = subprocess.call(["octave", "becas_section.m"])
+                else:
+                    out = commands.getoutput('octave becas_section.m')
 
             elif self.exec_mode == 'matlab':
-                out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
+                if self.debug_mode:
+                    out = subprocess.call(["matlab", "-nosplash", "-nodesktop", "-nojvm", "-r", "becas_section"])
+                else:
+                    out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
             # print out
             # self._logger.info(out)
 
@@ -277,6 +279,8 @@ class BECASWrapper(object):
             # except:
             #     pass
             
+        self.get_out_vars()
+
         self.get_out_vars()
 
     def add_utils(self, out_str):
@@ -303,7 +307,11 @@ class BECASWrapper(object):
         out_str.append("OutputFilename='%s'; \n" % 'BECAS2HAWC2.out')
         out_str.append("utils.hawc2_flag=%s ;\n" % str(not self.hawc2_FPM).lower())
         out_str.append('BECAS_Becas2Hawc2(OutputFilename,RadialPosition,constitutive,csprops,utils)\n')
-        out_str.append("save('%s', 'utils', 'solutions', 'csprops')\n" % self.utils_rst_filename)
+        
+        if self.exec_mode == 'octave':
+            out_str.append("save('-v7', '%s', 'utils', 'solutions', 'csprops', 'constitutive')\n" % self.utils_rst_filename)
+        else:
+            out_str.append("save('%s', 'utils', 'solutions', 'csprops', 'constitutive')\n" % self.utils_rst_filename)
 
         return out_str
 
@@ -366,7 +374,7 @@ class BECASWrapper(object):
 
         fid = open('BECAS_SetupPath.m','w')
         fid.write(setup_path)
-        fid.close()
+        fid.close()     
         
     def get_out_vars(self):
         """
@@ -378,12 +386,16 @@ class BECASWrapper(object):
         for k in strc.dtype.names:
             if k == 'MassPerMaterial':
                 # skipped because array needs to be flat
-                v = 0
+                pass
             else:
                 v = strc[k]
-            self.csprops = np.append(self.csprops,v)
+                self.csprops = np.append(self.csprops,v)
+        self.masspermaterial = rst['csprops']['MassPerMaterial']
         
-        
+        matmatrix = spio.loadmat(self.utils_rst_filename, squeeze_me=True, struct_as_record=False)  
+        self.k_matrix = matmatrix['constitutive'].Ks
+        self.m_matrix = matmatrix['constitutive'].Ms
+         
 
     def execute_oct2py(self):
         """
