@@ -187,7 +187,6 @@ def configure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=Fals
     cfg = {}
     cfg['dry_run'] = dry_run
     cfg['dominant_elsets'] = ['REGION04', 'REGION08']
-    cfg['woffsets'] = ['mid', 'mid', 'mid', 'mid']
     cfg['max_layers'] = 0
     config['CS2DtoBECAS'] = cfg
     cfg = {}

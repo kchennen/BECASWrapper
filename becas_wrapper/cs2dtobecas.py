@@ -37,7 +37,7 @@ class CS2DtoBECAS(object):
         Section name used by shellexpander, also by BECASWrapper
     dominant_elsets: list
         list of region names defining the spar cap regions for correct meshing
-    woffsets: List of web shell offset types
+    web_offsets: List of web shell offset types
             Example: ['mid', 'top'] means web00 is modelled as 'mid' offset and
             web01 is modelled as top offset. The stacking direction depends on the
             order of the DPs in iwebs.
@@ -67,6 +67,7 @@ class CS2DtoBECAS(object):
         self.open_te = False
         self.becas_inputs = 'becas_inputs'
         self.section_name = 'BECAS_SECTION%3.3f' % cs2d['s']
+        self.web_offsets = []
         self.subelsets = []
 
         self.path_input = ''
@@ -530,8 +531,14 @@ class CS2DtoBECAS(object):
             f.write('****************************\n')
             names = ['REGION%02d' % i for i in range(len(self.cs2d['regions']))]
             names.extend(['WEB%02d' % i for i in range(len(self.cs2d['webs']))])
+            # standard offsets for shell
             offsets = ['top' for i in range(len(self.cs2d['regions']))]
-            offsets.extend(self.woffsets)
+            if not self.web_offsets:
+                # if web_offsets not provided
+                for web in range(len(self.cs2d['web_def'])):
+                    offsets.append('mid')
+            else:
+                offsets.extend(self.web_offsets)
             for i, r in enumerate(self.cs2d['regions'] + self.cs2d['webs']):
                 r_name = names[i]
                 r_offset = offsets[i]
