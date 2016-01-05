@@ -47,9 +47,13 @@ class BECASCSStructure(Component):
         vector of cross section properties. Size (19) or (30)
         for standard HAWC2 output or the fully populated stiffness
         matrix, respectively.
+        
+    csprops_ref: array
+        vector of cross section properties as of BECAS output w.r.t BECAS reference
+        coordinate system. Size (18).
     """
 
-    def __init__(self, name, becas_hash, config, st3d, s, ni_chord, cs_size):
+    def __init__(self, name, becas_hash, config, st3d, s, ni_chord, cs_size, cs_size_ref):
         """
         parameters
         ----------
@@ -63,6 +67,8 @@ class BECASCSStructure(Component):
             number of points definiting the cross-section shape
         cs_size: int
             size of blade_beam_structure array (19 or 30)
+        cs_size_ref: int
+            size of blade_beam_csprops_ref array (18)
         """
         super(BECASCSStructure, self).__init__()
 
@@ -118,6 +124,7 @@ class BECASCSStructure(Component):
 
         # add outputs
         self.add_output('%s:cs_props' % name, np.zeros(cs_size))
+        self.add_output('%s:csprops_ref' % name, np.zeros(cs_size_ref))
         self.cs_props_m1 = np.zeros(cs_size)
         self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
         # not so nice hack to ensure unique directory names when
@@ -183,7 +190,7 @@ class BECASCSStructure(Component):
     def solve_nonlinear(self, params, unknowns, resids):
         """
         calls CS2DtoBECAS/shellexpander to generate mesh
-        and BECAS to compute the cs_props
+        and BECAS to compute the cs_props and csprops
         """
 
         try:
@@ -199,9 +206,12 @@ class BECASCSStructure(Component):
         self.becas.compute()
         if self.becas.success:
             self.unknowns['%s:cs_props' % self.name] = self.becas.cs_props
+            self.unknowns['%s:csprops_ref' % self.name] = self.becas.csprops
             self.cs_props_m1 = self.becas.cs_props.copy()
+            self.csprops_m1 = self.becas.csprops.copy()
         else:
             self.unknowns['%s:cs_props' % self.name] = self.cs_props_m1.copy()
+            self.unknowns['%s:csprops_ref' % self.name] = self.csprops_m1 = self.becas.csprops.copy()
 
         os.chdir(self.basedir)
 
@@ -291,7 +301,9 @@ class PostprocessCS(Component):
     parameters
     ----------
     cs_props<xxx>: array
-        array of cross section props. Size (19).
+        array of cross section props in HAWC2 format. Size (19).
+    csprops_ref<xxx>: array
+        array of cross section props wrt ref axis. Size (18).
     blade_x: array
         dimensionalised x-coordinate of blade axis
     blade_y: array
@@ -305,13 +317,15 @@ class PostprocessCS(Component):
     -------
     blade_beam_structure: array
         array of beam structure properties. Size ((nsec, 19)).
+    blade_beam_csprops_ref: array
+        array of beam cs properties. Size ((nsec, 18)).
     blade_mass: float
         blade mass integrated from dm in beam properties
     blade_mass_moment: float
         blade mass moment integrated from dm in beam properties
     """
 
-    def __init__(self, nsec, cs_size):
+    def __init__(self, nsec, cs_size, cs_size_ref):
         """
         parameters
         ----------
@@ -319,6 +333,8 @@ class PostprocessCS(Component):
             number of blade sections.
         cs_size: int
             size of blade_beam_structure array (19 or 30).
+        cs_size_ref: int
+            size of blade_beam_csprops_ref array (18).
         """
         super(PostprocessCS, self).__init__()
 
@@ -326,6 +342,8 @@ class PostprocessCS(Component):
 
         for i in range(nsec):
             self.add_param('cs_props%03d' % i, np.zeros(cs_size),
+                desc='cross-sectional props for sec%03d' % i)
+            self.add_param('csprops_ref%03d' % i, np.zeros(cs_size_ref),
                 desc='cross-sectional props for sec%03d' % i)
         self.add_param('hub_radius', 0., units='m', desc='Hub length')
         self.add_param('blade_length', 0., units='m', desc='Blade length')
@@ -344,6 +362,8 @@ class PostprocessCS(Component):
 
         self.add_output('blade_beam_structure', np.zeros((nsec, cs_size)),
             desc='Beam properties of the blade')
+        self.add_output('blade_beam_csprops_ref', np.zeros((nsec, cs_size_ref)),
+            desc='Cross section properties of the blade')
         self.add_output('blade_mass', 0., units='kg', desc='Blade mass')
         self.add_output('blade_mass_moment', 0., units='N*m',
             desc='Blade mass moment')
@@ -383,6 +403,11 @@ class PostprocessCS(Component):
         unknowns['blade_mass_moment'] = mm
 
         print('blade mass %10.3f' % m)
+        
+        for i in range(self.nsec):
+            cname = 'csprops_ref%03d' % i
+            cs = params[cname]
+            unknowns['blade_beam_csprops_ref'][i, :] = cs
 
 
 class BECASBeamStructure(Group):
@@ -429,6 +454,8 @@ class BECASBeamStructure(Group):
         blade mass integrated from blade_beam_structure dm
     blade_mass_moment: float
         blade mass moment integrated from blade_beam_structure dm
+    blade_beam_csprops_ref: array
+        array of beam cs properties. Size ((nsec, 18)).
     """
 
     def __init__(self, group, config, st3d, sdim):
@@ -473,6 +500,8 @@ class BECASBeamStructure(Group):
                 cs_size = 19
         except:
             cs_size = 19
+            
+        cs_size_ref = 18
 
         self.st3d = st3d
         nr = len(st3d['regions'])
@@ -500,7 +529,7 @@ class BECASBeamStructure(Group):
         for i in range(nsec):
             secname = 'sec%03d' % i
             par.add(secname, BECASCSStructure(secname, self.__hash__(), config, st3d,
-                                              st3d['s'][i], sdim[0], cs_size), promotes=['*'])
+                                              st3d['s'][i], sdim[0], cs_size, cs_size_ref), promotes=['*'])
 
         promotions = ['hub_radius',
                       'blade_length',
@@ -510,12 +539,14 @@ class BECASBeamStructure(Group):
                       'chord_st',
                       'p_le_st',
                       'blade_beam_structure',
+                      'blade_beam_csprops_ref',
                       'blade_mass',
                       'blade_mass_moment']
-        self.add('postpro', PostprocessCS(nsec, cs_size), promotes=promotions)
+        self.add('postpro', PostprocessCS(nsec, cs_size, cs_size_ref), promotes=promotions)
         for i in range(nsec):
             secname = 'sec%03d' % i
             self.connect('%s:cs_props' % secname, 'postpro.cs_props%03d' % i)
+            self.connect('%s:csprops_ref' % secname, 'postpro.csprops_ref%03d' % i)
             
 class BECASCSStructureKM(Component):
     
