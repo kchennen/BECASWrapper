@@ -126,6 +126,7 @@ class BECASCSStructure(Component):
         self.add_output('%s:cs_props' % name, np.zeros(cs_size))
         self.add_output('%s:csprops_ref' % name, np.zeros(cs_size_ref))
         self.cs_props_m1 = np.zeros(cs_size)
+        self.csprops_ref_m1 = np.zeros(cs_size_ref)
         self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
         # not so nice hack to ensure unique directory names when
         # running parallel FD
