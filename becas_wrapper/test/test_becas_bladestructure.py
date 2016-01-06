@@ -144,6 +144,32 @@ k_33 = np.r_[1.785315e+10,   8.836761e+09,   4.577343e+09,   1.130538e+08]
 m_11 = np.r_[1195.211939,   592.34256 ,   279.786025,     9.700352]
 m_66 = np.r_[7.719385e+03,   1.789339e+03,   2.600945e+02,   3.610753e-01]
 
+
+blade_beam_csprops_ref = np.array([[4.474857571200e-03,   2.599762118283e-04,   -9.157499886237e-05,
+   -3.306655442824e-04,   1.195211938859e+03,   -1.588878980638e-04,
+   -3.009440171980e-04,   3.992316433565e+03,   3.727068507990e+03,
+   -7.404571580370e+01,   1.340715450484e-04,   -1.092717574164e-04,
+    3.938231661555e+00,    2.802814511784e+00,   -3.152343526124e-01,
+    1.415130043541e+00,   -1.311462270413e+00,   -1.311461438155e+00],
+ [  4.908030518195e-01,   6.959836503382e-02,  -1.150327041031e-01,
+    2.324113459673e-02,    5.923425595388e+02,   -2.675794703838e-01,
+    2.878040953273e-02,    3.385769964145e+02,    1.450762033874e+03,
+   -6.162361026397e+01,   -7.087869476120e-01,    4.144758980677e-02,
+    4.334589485158e-01,    3.515283448483e+00,   -1.193268354796e-01,
+    1.093064725326e+00,   -7.175630872012e-02,   -7.060151774729e-02],
+ [  2.768555647326e-01,   5.495028591497e-02,   -2.936890196238e-02,
+    2.432414778754e-02,    2.797860246237e+02,   -1.309295989256e-01,
+    2.786197648689e-02,    3.550486639273e+01,    2.245896822866e+02,
+   -4.892896266637e+00,   -4.310699863189e-01,    3.902041195802e-02,
+    3.542503985710e-02,    4.195892599719e-01,   -1.412923459245e-02,
+    3.739199369997e-01,   -2.098822377911e-02,   -1.966340490644e-02],
+ [  3.219878368248e-02,   7.392767620068e-03,  -6.961655960636e-02,
+    5.677098228827e-03,   9.700351807258e+00,  -7.891470133185e-02,
+    6.115817115837e-03,   1.753947279759e-02,  3.435357828118e-01,
+   -9.091536441662e-03,  -6.366067838082e-02,   6.318474747329e-03,
+    3.189399797468e-05,   4.525135763937e-04,  -1.433510628713e-05,
+    1.596955117636e-02,  -2.523556151881e-02,  -1.538518181341e-02]])
+
 def configure_BECASBeamStructure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=False):
 
     p = Problem(impl=impl, root=Group())
@@ -278,7 +304,9 @@ class BECASBeamStructureTestCase(unittest.TestCase):
         self.assertEqual(np.testing.assert_allclose(p['KStruct'][2,2,:], k_33, 1E-6), None)
         self.assertEqual(np.testing.assert_allclose(p['MStruct'][0,0,:], m_11, 1E-6), None)
         self.assertEqual(np.testing.assert_allclose(p['MStruct'][5,5,:], m_66, 1E-6), None)
-  
+        
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_csprops_ref'][:,:]/blade_beam_csprops_ref[:,:], np.ones((4,18)), decimal=6), None)
+        
   
         # when hooked up to a constraint these outputs ought to be
         # available on all procs
@@ -303,6 +331,7 @@ class BECASBeamStructureTestCase(unittest.TestCase):
         self.assertEqual(np.testing.assert_allclose(p['MStruct'][0,0,:], m_11, 1E-6), None)
         self.assertEqual(np.testing.assert_allclose(p['MStruct'][5,5,:], m_66, 1E-6), None)
 
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_csprops_ref'][:,:]/blade_beam_csprops_ref[:,:], np.ones((4,18)), decimal=6), None)
 
         # when hooked up to a constraint these outputs ought to be
         # available on all procs
@@ -330,6 +359,7 @@ class BECASBeamStructureTestCase(unittest.TestCase):
         self.assertEqual(np.testing.assert_allclose(p['MStruct'][0,0,:], m_11, 1E-6), None)
         self.assertEqual(np.testing.assert_allclose(p['MStruct'][5,5,:], m_66, 1E-6), None)
 
+        self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_csprops_ref'][:,:]/blade_beam_csprops_ref[:,:], np.ones((4,18)), decimal=6), None)
 
 
         # when hooked up to a constraint these outputs ought to be
@@ -381,3 +411,7 @@ class BECASBeamStructureKMTestCase(unittest.TestCase):
         
 if __name__ == "__main__":
     unittest.main()
+    #p = configure_BECASBeamStructure(4, 'matlab', 'data', False, False)
+    #p.run()
+    #np.set_printoptions(precision=12)
+    #print(p['blade_beam_csprops_ref'][:,:])
