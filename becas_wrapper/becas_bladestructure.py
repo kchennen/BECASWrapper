@@ -47,7 +47,7 @@ class BECASCSStructure(Component):
         vector of cross section properties. Size (19) or (30)
         for standard HAWC2 output or the fully populated stiffness
         matrix, respectively.
-        
+
     csprops_ref: array
         vector of cross section properties as of BECAS output w.r.t BECAS reference
         coordinate system. Size (18).
@@ -131,7 +131,7 @@ class BECASCSStructure(Component):
         self.csprops_ref_m1 = np.zeros(cs_size_ref)
         self.k_matrix_m1 = np.zeros((6,6))
         self.m_matrix_m1 = np.zeros((6,6))
-        
+
         self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
         # not so nice hack to ensure unique directory names when
         # running parallel FD
@@ -383,8 +383,8 @@ class PostprocessCS(Component):
         self.add_output('blade_mass', 0., units='kg', desc='Blade mass')
         self.add_output('blade_mass_moment', 0., units='N*m',
             desc='Blade mass moment')
-        self.add_output('MStruct', shape=(6,6,nsec))    
-        self.add_output('KStruct', shape=(6,6,nsec))   
+        self.add_output('MStruct', shape=(6,6,nsec))
+        self.add_output('KStruct', shape=(6,6,nsec))
 
     def solve_nonlinear(self, params, unknowns, resids):
         """
@@ -421,12 +421,12 @@ class PostprocessCS(Component):
         unknowns['blade_mass_moment'] = mm
 
         print('blade mass %10.3f' % m)
-        
+
         for i in range(self.nsec):
             cname = 'csprops_ref%03d' % i
             cs = params[cname]
             unknowns['blade_beam_csprops_ref'][i, :] = cs
-            
+
         for i in range(self.nsec):
             unknowns['KStruct'][:,:,i] = params['k_matrix%03d' % i]
             unknowns['MStruct'][:,:,i] = params['m_matrix%03d' % i]
@@ -480,12 +480,12 @@ class BECASBeamStructure(Group):
         array of beam cs properties. Size ((nsec, 18)).
     KStruct: array size (6,6,nsec)
         array of stiffness matrix
-        variables: K_11 K_12 K_13 K_14 K_15 K_16 K_22 K_23 K_24 K_25 K_26 
-                   K_33 K_34 K_35 K_36 K_44 K_45 K_46 K_55 K_56 K_66 
+        variables: K_11 K_12 K_13 K_14 K_15 K_16 K_22 K_23 K_24 K_25 K_26
+                   K_33 K_34 K_35 K_36 K_44 K_45 K_46 K_55 K_56 K_66
     MStruct: array size (6,6,nsec)
         array of mass matrix
-        variables: M_11 M_12 M_13 M_14 M_15 M_16 M_22 M_23 M_24 M_25 M_26 
-                   M_33 M_34 M_35 M_36 M_44 M_45 M_46 M_55 M_56 M_66 
+        variables: M_11 M_12 M_13 M_14 M_15 M_16 M_22 M_23 M_24 M_25 M_26
+                   M_33 M_34 M_35 M_36 M_44 M_45 M_46 M_55 M_56 M_66
     """
 
     def __init__(self, group, config, st3d, sdim):
@@ -530,7 +530,7 @@ class BECASBeamStructure(Group):
                 cs_size = 19
         except:
             cs_size = 19
-            
+
         cs_size_ref = 18
 
         self.st3d = st3d
@@ -582,9 +582,9 @@ class BECASBeamStructure(Group):
             self.connect('%s:k_matrix' % secname, 'postpro.k_matrix%03d' % i)
             self.connect('%s:m_matrix' % secname, 'postpro.m_matrix%03d' % i)
 
-            
+
 class BECASCSStructureKM(Component):
-    
+
     def __init__(self, name, becas_hash, config, input_folder, s):
         """
         parameters
@@ -596,12 +596,12 @@ class BECASCSStructureKM(Component):
         s: array
             spanwise location of the cross-section
         """
-        
+
         super(BECASCSStructureKM, self).__init__()
 
         self.basedir = os.getcwd()
         self.becas_hash = becas_hash
-        
+
         # add outputs
         self.add_output('%s:k_matrix' % name, shape=(6,6))
         self.add_output('%s:m_matrix' % name, shape=(6,6))
@@ -611,12 +611,12 @@ class BECASCSStructureKM(Component):
         # running parallel FD
         # the hash is passed to downstream BECASStressRecovery class
         self.add_output(name + ':hash', float(self.becas_hash))
-       
+
         config['BECASWrapper']['path_input'] = os.path.join(self.basedir, input_folder)
-        
+
         self.becas = BECASWrapper(s, **config['BECASWrapper'])
         self.s = s
-        
+
     def solve_nonlinear(self, params, unknowns, resids):
         """
         calls BECAS to compute the stiffness and mass terms
@@ -631,17 +631,17 @@ class BECASCSStructureKM(Component):
         self.becas.compute()
         self.unknowns['%s:k_matrix' % self.name] = self.becas.k_matrix
         self.unknowns['%s:m_matrix' % self.name] = self.becas.m_matrix
-   
+
         #remove becas output files and folders related to hash
 #         os.remove('becas_section.m')
 #         os.remove('BECAS_SetupPath.m')
 #         os.remove('becas_utils%.3f.mat' % self.s)
 #         os.rmdir(os.getcwd())
-        
-        os.chdir(self.basedir)       
-            
-class PostprocessCSKM(Component):       
-    
+
+        os.chdir(self.basedir)
+
+class PostprocessCSKM(Component):
+
     def __init__(self, nsec, becas_span):
         super(PostprocessCSKM, self).__init__()
         """
@@ -652,26 +652,26 @@ class PostprocessCSKM(Component):
         becas_span: array
             spanwise location vector of the cross-section
         """
-        
+
         for i in range(nsec):
             self.add_param('k_matrix%03d' % i, shape=(6,6), desc='stiffness matrix for sec%03d' % i)
             self.add_param('m_matrix%03d' % i, shape=(6,6), desc='mass matrix for sec%03d' % i)
-            
-        self.add_output('MStruct', shape=(6,6,nsec))    
-        self.add_output('KStruct', shape=(6,6,nsec))    
-        self.add_output('sStruct', shape=(nsec))    
-        
+
+        self.add_output('MStruct', shape=(6,6,nsec))
+        self.add_output('KStruct', shape=(6,6,nsec))
+        self.add_output('sStruct', shape=(nsec))
+
         self.nsec = nsec
         self.becas_span = becas_span
-        
+
     def solve_nonlinear(self, params, unknowns, resids):
-  
+
         unknowns['sStruct'] = self.becas_span
         for i in range(self.nsec):
             unknowns['KStruct'][:,:,i] = params['k_matrix%03d' % i]
             unknowns['MStruct'][:,:,i] = params['m_matrix%03d' % i]
-        
-            
+
+
 class BECASBeamStructureKM(Group):
     """
     Group for computing mass and stiffness matrix
@@ -681,12 +681,12 @@ class BECASBeamStructureKM(Group):
     -------
     KStruct: array size (6,6,nsec)
         array of stiffness matrix
-        variables: K_11 K_12 K_13 K_14 K_15 K_16 K_22 K_23 K_24 K_25 K_26 
-                   K_33 K_34 K_35 K_36 K_44 K_45 K_46 K_55 K_56 K_66 
+        variables: K_11 K_12 K_13 K_14 K_15 K_16 K_22 K_23 K_24 K_25 K_26
+                   K_33 K_34 K_35 K_36 K_44 K_45 K_46 K_55 K_56 K_66
     MStruct: array size (6,6,nsec)
         array of mass matrix
-        variables: M_11 M_12 M_13 M_14 M_15 M_16 M_22 M_23 M_24 M_25 M_26 
-                   M_33 M_34 M_35 M_36 M_44 M_45 M_46 M_55 M_56 M_66 
+        variables: M_11 M_12 M_13 M_14 M_15 M_16 M_22 M_23 M_24 M_25 M_26
+                   M_33 M_34 M_35 M_36 M_44 M_45 M_46 M_55 M_56 M_66
     sStruct: array size nsec
         array of spanwise positions
     """
@@ -705,7 +705,7 @@ class BECASBeamStructureKM(Group):
             variables: s, nsec, path_input_folders
         """
         super(BECASBeamStructureKM, self).__init__()
-        
+
         # check that the config is ok
         if not 'BECASWrapper' in config.keys():
             raise RuntimeError('You need to supply a config dict',
@@ -738,4 +738,3 @@ class BECASBeamStructureKM(Group):
             secname = 'sec%03d' % i
             self.connect('%s:k_matrix' % secname, 'postpro.k_matrix%03d' % i)
             self.connect('%s:m_matrix' % secname, 'postpro.m_matrix%03d' % i)
-
