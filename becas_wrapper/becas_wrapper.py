@@ -276,7 +276,7 @@ class BECASWrapper(object):
             self.max_failure_ks = np.array(ks_failure)
             # except:
             #     pass
-
+            
         self.get_out_vars()
 
     def add_utils(self, out_str):
@@ -370,8 +370,8 @@ class BECASWrapper(object):
 
         fid = open('BECAS_SetupPath.m','w')
         fid.write(setup_path)
-        fid.close()
-
+        fid.close()     
+        
     def get_out_vars(self):
         """
         Obtain all BECAS output variables and store into arrays

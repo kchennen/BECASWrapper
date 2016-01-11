@@ -10,7 +10,6 @@ try:
 except:
     _PGL_installed = False
 
-
 class CS2DtoBECAS(object):
     """
     Component that generates a set of BECAS input files based on
@@ -38,7 +37,7 @@ class CS2DtoBECAS(object):
         Section name used by shellexpander, also by BECASWrapper
     dominant_elsets: list
         list of region names defining the spar cap regions for correct meshing
-    woffsets: List of web shell offset types
+    web_offsets: List of web shell offset types
             Example: ['mid', 'top'] means web00 is modelled as 'mid' offset and
             web01 is modelled as top offset. The stacking direction depends on the
             order of the DPs in iwebs.
@@ -59,9 +58,8 @@ class CS2DtoBECAS(object):
     """
 
     def __init__(self, cs2d, **kwargs):
-
         self.path_shellexpander = os.environ['SHELLEXP_BASEDIR']
-
+        
         self.dry_run = False
         self.cs2d = cs2d
         self.total_points = 100
@@ -69,6 +67,7 @@ class CS2DtoBECAS(object):
         self.open_te = False
         self.becas_inputs = 'becas_inputs'
         self.section_name = 'BECAS_SECTION%3.3f' % cs2d['s']
+        self.web_offsets = []
         self.subelsets = []
 
         self.path_input = ''
@@ -97,9 +96,6 @@ class CS2DtoBECAS(object):
         tt = time.time()
 
         self.redistribute_flag = redistribute_flag
-
-        if not os.path.exists(os.path.join(self.path_shellexpander, 'src', 'shellexpander.py')):
-            raise RuntimeError('Please define a valid absolute path to SHELLEXPANDER in SHELLEXP_BASEDIR environment variable')
 
         self.path_input = os.path.join(self.becas_inputs, self.section_name)
 
@@ -535,8 +531,14 @@ class CS2DtoBECAS(object):
             f.write('****************************\n')
             names = ['REGION%02d' % i for i in range(len(self.cs2d['regions']))]
             names.extend(['WEB%02d' % i for i in range(len(self.cs2d['webs']))])
+            # standard offsets for shell
             offsets = ['top' for i in range(len(self.cs2d['regions']))]
-            offsets.extend(self.web_offsets)
+            if not self.web_offsets:
+                # if web_offsets not provided
+                for web in range(len(self.cs2d['web_def'])):
+                    offsets.append('mid')
+            else:
+                offsets.extend(self.web_offsets)
             for i, r in enumerate(self.cs2d['regions'] + self.cs2d['webs']):
                 r_name = names[i]
                 r_offset = offsets[i]
@@ -638,12 +640,20 @@ class CS2DtoBECAS(object):
         args.subelsets = self.subelsets
 
         if not self.dry_run:
-            import imp
-            shellexpander = imp.load_source('shellexpander',
+            try: #shellexpander >1.5
+                import shellexpander
+                if shellexpander.__version__:
+                    from shellexpander import shellexpander
+                    shellexp_sections = shellexpander.main(args)
+                    msh2d = shellexp_sections[args.sections]
+                    return msh2d
+            except:
+                import imp
+                shellexpander = imp.load_source('shellexpander',
                               os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
 
-            msh2d = shellexpander.main(args)
-            return msh2d
+                shellexpander.main(args)
+                
 
     def output_te_ratio(self):
         """
