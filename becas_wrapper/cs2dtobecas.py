@@ -58,7 +58,6 @@ class CS2DtoBECAS(object):
     """
 
     def __init__(self, cs2d, **kwargs):
-        self.path_shellexpander = os.environ['SHELLEXP_BASEDIR']
         
         self.dry_run = False
         self.cs2d = cs2d
@@ -650,7 +649,7 @@ class CS2DtoBECAS(object):
             except:
                 import imp
                 shellexpander = imp.load_source('shellexpander',
-                              os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
+                              os.path.join(os.environ['SHELLEXP_BASEDIR'], 'src', 'shellexpander.py'))
 
                 shellexpander.main(args)
                 
