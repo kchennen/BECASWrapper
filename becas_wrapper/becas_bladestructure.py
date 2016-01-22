@@ -131,6 +131,8 @@ class BECASCSStructure(Component):
         self.csprops_ref_m1 = np.zeros(cs_size_ref)
         self.k_matrix_m1 = np.zeros((6,6))
         self.m_matrix_m1 = np.zeros((6,6))
+        
+        self.add_output('%s:DPcoords' % name, np.zeros((self.nr + 1, 3)))
 
         self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
         # not so nice hack to ensure unique directory names when
@@ -209,6 +211,9 @@ class BECASCSStructure(Component):
 
         self.mesher.cs2d = self.cs2d
         self.mesher.compute()
+        
+        self.unknowns['%s:DPcoords' % self.name][:,0:2] = np.array(self.mesher.DPcoords)
+        
         self.becas.compute()
         if self.becas.success:
             self.unknowns['%s:cs_props' % self.name] = self.becas.cs_props
