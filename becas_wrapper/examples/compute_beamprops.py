@@ -1,4 +1,6 @@
 
+# --- 1 -----
+
 import os
 import time
 import numpy as np
@@ -6,7 +8,8 @@ import unittest
 import pkg_resources
 
 from openmdao.core.mpi_wrap import MPI
-from openmdao.api import Problem, Group, Component, IndepVarComp, ExecComp
+from openmdao.api import Problem, Group, IndepVarComp, ExecComp
+from openmdao.api import SqliteRecorder
 
 from PGL.main.distfunc import distfunc
 from fusedwind.turbine.geometry import read_blade_planform,\
@@ -32,29 +35,35 @@ PATH = pkg_resources.resource_filename('becas_wrapper', 'test')
 
 p = Problem(impl=impl, root=Group())
 root = p.root
-# --- 3 -----
 
-# Geometry
+# --- 2 -----
 
-# Number of structural calculation points
+# geometry
+
+# number of structural calculation points
 nsec_st = 8
 
 # number of aerodynamic calculation points (not relevant for this example)
 nsec_ae = 30
 
-root.add('blade_length_c', ExecComp('blade_length = 86.366'), promotes=['*'])
-
-pf = read_blade_planform(os.path.join(PATH, 'data/DTU_10MW_RWT_blade_axis_prebend.dat'))
-
 # distribute structural and aerodynamic grid evenly
 s_ae = np.linspace(0, 1, nsec_ae)
 s_st = np.linspace(0, 1, nsec_st)
+
+# add an ExecComp defining blade length TODO: this shouldn't be necessary
+root.add('blade_length_c', ExecComp('blade_length = 86.366'), promotes=['*'])
+
+# read the blade planform into a simple dictionary format
+pf = read_blade_planform(os.path.join(PATH, 'data/DTU_10MW_RWT_blade_axis_prebend.dat'))
 
 # spline the planform and interpolate onto s_ae distribution
 pf = redistribute_planform(pf, s=s_ae)
 
 # add planform spline component defined in FUSED-Wind
 spl_ae = p.root.add('pf_splines', SplinedBladePlanform(pf), promotes=['*'])
+
+# this method adds IndepVarComp's for all pf quantities
+# in no splines are defined, see FUSED-Wind docs for more details
 spl_ae.configure()
 
 # component for interpolating planform onto structural mesh
@@ -83,6 +92,8 @@ surf = root.add('blade_surf', PGLLoftedBladeSurface(cfg, size_in=nsec_st,
                 size_out=(200, nsec_st, 3), suffix='_st'),
                 promotes=['*'])
 
+# --- 3 -----
+
 # read the blade structure
 st3d = read_bladestructure(os.path.join(PATH, 'data/DTU10MW'))
 
@@ -94,6 +105,8 @@ st3dn = interpolate_bladestructure(st3d, s_st)
 spl_st = root.add('st_splines', SplinedBladeStructure(st3dn),
                   promotes=['*'])
 spl_st.configure()
+
+# --- 4 -----
 
 # inputs to CS2DtoBECAS and BECASWrapper
 config = {}
@@ -113,8 +126,9 @@ config['BECASWrapper'] = cfg
 root.add('stiffness', BECASBeamStructure(root, config, st3dn,
          (200, nsec_st, 3)), promotes=['*'])
 
+# --- 5 -----
+
 # add the recorder
-from openmdao.api import SqliteRecorder, DumpRecorder
 recorder = SqliteRecorder('optimization.sqlite')
 p.driver.add_recorder(recorder)
 
@@ -128,3 +142,5 @@ print 'Total time', time.time() - t0
 
 # save the computed HAWC2 beam properties to a file
 np.savetxt('hawc2_blade_st.dat', p['blade_beam_structure'])
+
+# --- 6 -----
