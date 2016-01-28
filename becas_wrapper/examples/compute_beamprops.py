@@ -65,6 +65,7 @@ redist = root.add('pf_st', PGLRedistributedPlanform('_st', nsec_ae, s_st),
 cfg = {}
 cfg['redistribute_flag'] = False
 
+# read the airfoil family used on the blade
 afs = []
 for f in [os.path.join(PATH, 'data/ffaw3241.dat'),
           os.path.join(PATH, 'data/ffaw3301.dat'),
@@ -98,7 +99,7 @@ spl_st.configure()
 config = {}
 cfg = {}
 cfg['dry_run'] = False
-cfg['dominant_elsets'] = ['REGION03', 'REGION07']
+cfg['dominant_elsets'] = ['REGION04', 'REGION08']
 cfg['max_layers'] = 10
 config['CS2DtoBECAS'] = cfg
 cfg = {}
