@@ -130,6 +130,8 @@ root.add('stiffness', BECASBeamStructure(root, config, st3dn,
 
 # add the recorder
 recorder = SqliteRecorder('optimization.sqlite')
+recorder.options['record_params'] = True
+recorder.options['record_metadata'] = True
 p.driver.add_recorder(recorder)
 
 # call OpenMDAO's setup method before running the problem
@@ -138,9 +140,46 @@ p.setup()
 # run it
 t0 = time.time()
 p.run()
+p.driver.recorders[0].close()
 print 'Total time', time.time() - t0
 
 # save the computed HAWC2 beam properties to a file
 np.savetxt('hawc2_blade_st.dat', p['blade_beam_structure'])
 
 # --- 6 -----
+
+# access recorded data
+import sqlitedict
+# load data base
+db = sqlitedict.SqliteDict('optimization.sqlite', 'openmdao')
+u = db['Driver/1']['Unknowns']
+p = db['Driver/1']['Parameters']
+
+# --- 7 -----
+
+# plot recorded data
+import matplotlib.pylab as plt
+plt.figure()
+plt.title('csprops_ref') # w.r.t reference coordinate system
+plt.plot(u['s_st'], u['blade_beam_csprops_ref'][:,0], 'o-', label = 'ShearX')
+plt.plot(u['s_st'], u['blade_beam_csprops_ref'][:,2], 'o-', label = 'ElasticX')
+plt.plot(u['s_st'], u['blade_beam_csprops_ref'][:,5], 'o-', label = 'MassX')
+plt.legend(loc='best')
+
+plt.figure()
+plt.title('KStruct') # w.r.t reference coordinate system
+plt.plot(u['s_st'], u['KStruct'][0,0,:], 'o-', label = 'K11') #kGAx
+plt.plot(u['s_st'], u['KStruct'][1,1,:], 'o-', label = 'K22') #kGAy
+plt.plot(u['s_st'], u['KStruct'][2,2,:], 'o-', label = 'K33') #AE
+plt.plot(u['s_st'], u['KStruct'][3,3,:], 'o-', label = 'K44') #EIx
+plt.plot(u['s_st'], u['KStruct'][4,4,:], 'o-', label = 'K55') #EIy
+plt.plot(u['s_st'], u['KStruct'][5,5,:], 'o-', label = 'K66') #GJ
+plt.legend(loc='best')
+
+plt.figure()
+plt.title('cs_props') # HAWC2 props
+plt.plot(u['s_st'], u['blade_beam_structure'][:,2], 'o-', label = 'x_cg')
+plt.plot(u['s_st'], u['blade_beam_structure'][:,6], 'o-', label = 'x_sh')
+plt.plot(u['s_st'], u['blade_beam_structure'][:,17], 'o-', label = 'x_e')
+plt.legend(loc='best')
+plt.show()
