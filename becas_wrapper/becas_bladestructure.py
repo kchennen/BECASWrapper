@@ -211,12 +211,11 @@ class BECASCSStructure(Component):
 
         self.mesher.cs2d = self.cs2d
         
-        self.unknowns['%s:DPcoords' % self.name][:,0:2] = np.array(self.mesher.DPcoords)
-        
         try:
             self.mesher.compute()
             self.becas.compute()
             if self.becas.success:
+                self.unknowns['%s:DPcoords' % self.name][:,0:2] = np.array(self.mesher.DPcoords)
                 self.unknowns['%s:cs_props' % self.name] = self.becas.cs_props
                 self.unknowns['%s:csprops_ref' % self.name] = self.becas.csprops
                 self.unknowns['%s:k_matrix' % self.name] = self.becas.k_matrix
