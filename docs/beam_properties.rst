@@ -97,6 +97,18 @@ OpenMDAO's `Problem.setup` method.
 .. literalinclude:: ../becas_wrapper/examples/compute_beamprops.py
     :start-after: # --- 5
     :end-before: # --- 6
+    
+The recorded data can be accessed with sqlitedict methods:
+
+.. literalinclude:: ../becas_wrapper/examples/compute_beamprops.py
+    :start-after: # --- 6
+    :end-before: # --- 7
+    
+and be plotted in the following manner:
+
+.. literalinclude:: ../becas_wrapper/examples/compute_beamprops.py
+    :start-after: # --- 7
+    :end-before: # --- 8
 
 If you have MPI installed, you can execute the code using `mpirun`:
 
