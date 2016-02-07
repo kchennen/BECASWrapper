@@ -379,6 +379,7 @@ class BECASWrapper(object):
         rst = spio.loadmat(self.utils_rst_filename, squeeze_me=True)
         # iterate over structured numpy array
         strc = rst['csprops']
+        self.csprops = np.array([])
         for k in strc.dtype.names:
             if k == 'MassPerMaterial':
                 # skipped because array needs to be flat
