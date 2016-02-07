@@ -183,3 +183,5 @@ plt.plot(u['s_st'], u['blade_beam_structure'][:,6], 'o-', label = 'x_sh')
 plt.plot(u['s_st'], u['blade_beam_structure'][:,17], 'o-', label = 'x_e')
 plt.legend(loc='best')
 plt.show()
+
+# --- 8 -----
