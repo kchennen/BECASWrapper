@@ -8,6 +8,6 @@ Contents:
    :maxdepth: 2
 
    overview
-   usage
+   beam_properties
    srcdocs
    pkgdocs
