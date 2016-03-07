@@ -59,7 +59,7 @@ class CS2DtoBECAS(object):
 
     def __init__(self, cs2d, **kwargs):
         self.path_shellexpander = os.environ['SHELLEXP_BASEDIR']
-        
+
         self.dry_run = False
         self.cs2d = cs2d
         self.total_points = 100
@@ -129,7 +129,7 @@ class CS2DtoBECAS(object):
         """
 
         self.max_thickness = 0.
-        for r in self.cs2d['regions']:
+        for r in self.cs2d['regions'] + self.cs2d['webs']:
             self.max_layers = max(self.max_layers, len(r['layers']))
             self.max_thickness = np.maximum(sum(r['thicknesses']), self.max_thickness)
 
@@ -653,7 +653,7 @@ class CS2DtoBECAS(object):
                               os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
 
                 shellexpander.main(args)
-                
+
 
     def output_te_ratio(self):
         """
