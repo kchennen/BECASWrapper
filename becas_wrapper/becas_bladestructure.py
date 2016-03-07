@@ -131,6 +131,8 @@ class BECASCSStructure(Component):
         self.csprops_ref_m1 = np.zeros(cs_size_ref)
         self.k_matrix_m1 = np.zeros((6,6))
         self.m_matrix_m1 = np.zeros((6,6))
+        
+        self.add_output('%s:DPcoords' % name, np.zeros((self.nr + 1, 3)))
 
         self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
         # not so nice hack to ensure unique directory names when
@@ -208,22 +210,32 @@ class BECASCSStructure(Component):
         self._params2dict(params)
 
         self.mesher.cs2d = self.cs2d
-        self.mesher.compute()
-        self.becas.compute()
-        if self.becas.success:
-            self.unknowns['%s:cs_props' % self.name] = self.becas.cs_props
-            self.unknowns['%s:csprops_ref' % self.name] = self.becas.csprops
-            self.unknowns['%s:k_matrix' % self.name] = self.becas.k_matrix
-            self.unknowns['%s:m_matrix' % self.name] = self.becas.m_matrix
-            self.cs_props_m1 = self.becas.cs_props.copy()
-            self.csprops_ref_m1 = self.becas.csprops.copy()
-            self.k_matrix_m1 = self.becas.k_matrix.copy()
-            self.m_matrix_m1 = self.becas.m_matrix.copy()
-        else:
-            self.unknowns['%s:cs_props' % self.name] = self.cs_props_m1.copy()
-            self.unknowns['%s:csprops_ref' % self.name] = self.csprops_ref_m1 = self.becas.csprops.copy()
-            self.unknowns['%s:k_matrix' % self.name] = self.becas.k_matrix_m1.copy()
-            self.unknowns['%s:m_matrix' % self.name] = self.becas.m_matrix_m1.copy()
+        
+        try:
+            self.mesher.compute()
+            self.becas.compute()
+            if self.becas.success:
+                self.unknowns['%s:DPcoords' % self.name][:,0:2] = np.array(self.mesher.DPcoords)
+                self.unknowns['%s:cs_props' % self.name] = self.becas.cs_props
+                self.unknowns['%s:csprops_ref' % self.name] = self.becas.csprops
+                self.unknowns['%s:k_matrix' % self.name] = self.becas.k_matrix
+                self.unknowns['%s:m_matrix' % self.name] = self.becas.m_matrix
+                self.cs_props_m1 = self.becas.cs_props.copy()
+                self.csprops_ref_m1 = self.becas.csprops.copy()
+                self.k_matrix_m1 = self.becas.k_matrix.copy()
+                self.m_matrix_m1 = self.becas.m_matrix.copy()
+            else:
+                self.unknowns['%s:cs_props' % self.name] = self.cs_props_m1
+                self.unknowns['%s:csprops_ref' % self.name] = self.csprops_ref_m1
+                self.unknowns['%s:k_matrix' % self.name] = self.k_matrix_m1
+                self.unknowns['%s:m_matrix' % self.name] = self.m_matrix_m1
+                print('BECAS crashed for section %f' % self.cs2d['s'])
+        except:
+            self.unknowns['%s:cs_props' % self.name] = self.cs_props_m1
+            self.unknowns['%s:csprops_ref' % self.name] = self.csprops_ref_m1
+            self.unknowns['%s:k_matrix' % self.name] = self.k_matrix_m1
+            self.unknowns['%s:m_matrix' % self.name] = self.m_matrix_m1
+            print('BECAS crashed for section %f' % self.cs2d['s'])
 
         os.chdir(self.basedir)
 
