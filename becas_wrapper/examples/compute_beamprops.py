@@ -152,8 +152,8 @@ np.savetxt('hawc2_blade_st.dat', p['blade_beam_structure'])
 import sqlitedict
 # load data base
 db = sqlitedict.SqliteDict('optimization.sqlite', 'openmdao')
-u = db['Driver/1']['Unknowns']
-p = db['Driver/1']['Parameters']
+u = db['rank0:Driver/1']['Unknowns']
+p = db['rank0:Driver/1']['Parameters']
 
 # --- 7 -----
 
