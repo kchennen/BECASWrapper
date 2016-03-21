@@ -38,8 +38,8 @@ class CS2DtoBECAS(object):
     dominant_elsets: list
         list of region names defining the spar cap regions for correct meshing
     web_offsets: List of web shell offset types
-            Example: ['mid', 'top'] means web00 is modelled as 'mid' offset and
-            web01 is modelled as top offset. The stacking direction depends on the
+            Example: ['mid', 'bot'] means web00 is modelled as 'mid' offset and
+            web01 is modelled as bot offset. The stacking direction depends on the
             order of the DPs in iwebs.
     subelsets: list
         list of region names by which the output mesh is reduced
@@ -531,7 +531,7 @@ class CS2DtoBECAS(object):
             names = ['REGION%02d' % i for i in range(len(self.cs2d['regions']))]
             names.extend(['WEB%02d' % i for i in range(len(self.cs2d['webs']))])
             # standard offsets for shell
-            offsets = ['top' for i in range(len(self.cs2d['regions']))]
+            offsets = ['bot' for i in range(len(self.cs2d['regions']))]
             if not self.web_offsets:
                 # if web_offsets not provided
                 for web in range(len(self.cs2d['web_def'])):
@@ -544,7 +544,7 @@ class CS2DtoBECAS(object):
                 if r_offset=='mid':
                 #if r_name.startswith('WEB'):
                     offset = 0.0
-                if r_offset=='top':
+                if r_offset=='bot':
                     offset = -0.5
                 text = '*SHELL SECTION, ELSET=%s, COMPOSITE, OFFSET=%3.3f\n'
                 f.write(text % (r_name, offset))
