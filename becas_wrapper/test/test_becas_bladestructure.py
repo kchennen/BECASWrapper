@@ -21,6 +21,7 @@ from becas_wrapper.becas_bladestructure import BECASBeamStructureKM,\
 from becas_wrapper.becas_stressrecovery import BECASStressRecovery
 
 from distutils.spawn import find_executable
+from PGL.components.airfoil import AirfoilShape
 
 _matlab_installed = find_executable('matlab')
 
@@ -170,7 +171,7 @@ blade_beam_csprops_ref = np.array([[4.474857571200e-03,   2.599762118283e-04,   
     3.189399797468e-05,   4.525135763937e-04,  -1.433510628713e-05,
     1.596955117636e-02,  -2.523556151881e-02,  -1.538518181341e-02]])
 
-def configure_BECASBeamStructure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=False):
+def configure_BECASBeamStructure(nsec, exec_mode, path_data, dry_run=False, FPM=False, with_sr=False, dpcoords=False, debug_sec = 0):
 
     p = Problem(impl=impl, root=Group())
 
@@ -203,6 +204,13 @@ def configure_BECASBeamStructure(nsec, exec_mode, path_data, dry_run=False, FPM=
 
     # read the blade structure
     st3d = read_bladestructure(os.path.join(path_data, 'DTU10MW'))
+    
+    dps01_in = None
+    if dpcoords:
+        afn = AirfoilShape(afs[(len(afs)-1)-debug_sec])
+        dps01_in = np.zeros(st3d['DPs'].shape[1])
+        for i, s in enumerate(st3d['DPs'][debug_sec+1,:]):
+            dps01_in[i] = afn.s_to_01(s)
 
     # and interpolate onto new distribution
     st3dn = interpolate_bladestructure(st3d, s_st)
@@ -244,7 +252,7 @@ def configure_BECASBeamStructure(nsec, exec_mode, path_data, dry_run=False, FPM=
         except:
             pass
 
-    return p
+    return p, dps01_in
 
 def configure_BECASBeamStructureKM(nsec, exec_mode):
     
@@ -292,7 +300,7 @@ class BECASBeamStructureTestCase(unittest.TestCase):
     #     p.run()
 
     def test_standard_octave(self):
-        p = configure_BECASBeamStructure(4, 'octave', 'data', False, False)
+        p, _ = configure_BECASBeamStructure(4, 'octave', 'data', False, False)
         p.run()
   
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
@@ -318,7 +326,7 @@ class BECASBeamStructureTestCase(unittest.TestCase):
             self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
     
     def test_standard_octave_data_version_1(self):
-        p = configure_BECASBeamStructure(4, 'octave', 'data_version_1', False, False)
+        p, _ = configure_BECASBeamStructure(4, 'octave', 'data_version_1', False, False)
         p.run()
 
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
@@ -346,7 +354,7 @@ class BECASBeamStructureTestCase(unittest.TestCase):
     @unittest.skipIf(not _matlab_installed,
                  "Matlab not available on this system")
     def test_standard_matlab(self):
-        p = configure_BECASBeamStructure(4, 'matlab', 'data', False, False)
+        p, _ = configure_BECASBeamStructure(4, 'matlab', 'data', False, False)
         p.run()
 
         self.assertEqual(np.testing.assert_array_almost_equal(p['blade_beam_structure'][:,1:]/beam_st[:,1:], np.ones((4,18)), decimal=6), None)
@@ -370,6 +378,15 @@ class BECASBeamStructureTestCase(unittest.TestCase):
             self.assertAlmostEqual(p['blade_failure_index_sec001'][0], 0.16552789587300576, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec002'][0], 0.16292259732314465, places=6)
             self.assertAlmostEqual(p['blade_failure_index_sec003'][0], 0.15931231052281988, places=6)
+    
+    def test_dps01(self):
+        debug_sec = 0
+        p, dps01_in  = configure_BECASBeamStructure(2, 'octave', 'data', False, False, dpcoords=True, debug_sec = debug_sec)
+        p.run()
+        file_dps01_out = 'dps01.dat'
+        hash = p.root.stiffness.hash_c.unknowns.vec[0]
+        dps01_out = np.loadtxt(os.path.join('becas_sec%03d' % debug_sec + '_' + str(int(hash)), file_dps01_out))
+        self.assertEqual(np.testing.assert_allclose(dps01_in, dps01_out, 1E-6), None)
 
     # def test_FPM(self):
     #

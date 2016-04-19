@@ -168,6 +168,7 @@ class CS2DtoBECAS(object):
 
         # convert DPs to s01 notation
         self.DPs01 = [af.s_to_01(s) for s in self.cs2d['DPs']]
+        np.savetxt('dps01.dat', self.DPs01) # write to file for test
         self.DPcoords = [af.interp_s(s) for s in self.DPs01]
         self.DPs01s = self.DPs01
         if True in (np.diff(np.asarray(self.DPs01)) < 0.):
