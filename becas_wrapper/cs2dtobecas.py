@@ -55,6 +55,9 @@ class CS2DtoBECAS(object):
         ratio between outer TE planform and TE layup thickness
     thickness_ratio: array
         ratio between outer surface height and layup thickness at DPs
+    spline_type: str
+        spline type used to redistribute points on the airfoil
+        default: ncubic, choices are: linear, pchip
     """
 
     def __init__(self, cs2d, **kwargs):
@@ -79,6 +82,7 @@ class CS2DtoBECAS(object):
         self.el_3d = np.array([])
         self.te_ratio = 0.
         self.thickness_ratio = np.array([])
+        self.spline_type = 'ncubic'
 
         for k, w in kwargs.iteritems():
             try:
@@ -107,7 +111,7 @@ class CS2DtoBECAS(object):
         self.web_element_idx = []   # web element indices
         self.webDPs = []
 
-        self.coords = AirfoilShape(points=self.cs2d['coords'])
+        self.coords = AirfoilShape(points=self.cs2d['coords'], spline=self.spline_type)
 
         self.compute_max_layers()
         self.compute_airfoil()
