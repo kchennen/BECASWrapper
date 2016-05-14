@@ -38,8 +38,8 @@ class CS2DtoBECAS(object):
     dominant_elsets: list
         list of region names defining the spar cap regions for correct meshing
     web_offsets: List of web shell offset types
-            Example: ['mid', 'top'] means web00 is modelled as 'mid' offset and
-            web01 is modelled as top offset. The stacking direction depends on the
+            Example: ['mid', 'bot'] means web00 is modelled as 'mid' offset and
+            web01 is modelled as bot offset. The stacking direction depends on the
             order of the DPs in iwebs.
     subelsets: list
         list of region names by which the output mesh is reduced
@@ -55,11 +55,13 @@ class CS2DtoBECAS(object):
         ratio between outer TE planform and TE layup thickness
     thickness_ratio: array
         ratio between outer surface height and layup thickness at DPs
+    spline_type: str
+        spline type used to redistribute points on the airfoil
+        default: ncubic, choices are: linear, pchip
     """
 
     def __init__(self, cs2d, **kwargs):
-        self.path_shellexpander = os.environ['SHELLEXP_BASEDIR']
-        
+
         self.dry_run = False
         self.cs2d = cs2d
         self.total_points = 100
@@ -80,6 +82,7 @@ class CS2DtoBECAS(object):
         self.el_3d = np.array([])
         self.te_ratio = 0.
         self.thickness_ratio = np.array([])
+        self.spline_type = 'ncubic'
 
         for k, w in kwargs.iteritems():
             try:
@@ -108,7 +111,7 @@ class CS2DtoBECAS(object):
         self.web_element_idx = []   # web element indices
         self.webDPs = []
 
-        self.coords = AirfoilShape(points=self.cs2d['coords'])
+        self.coords = AirfoilShape(points=self.cs2d['coords'], spline=self.spline_type)
 
         self.compute_max_layers()
         self.compute_airfoil()
@@ -129,7 +132,7 @@ class CS2DtoBECAS(object):
         """
 
         self.max_thickness = 0.
-        for r in self.cs2d['regions']:
+        for r in self.cs2d['regions'] + self.cs2d['webs']:
             self.max_layers = max(self.max_layers, len(r['layers']))
             self.max_thickness = np.maximum(sum(r['thicknesses']), self.max_thickness)
 
@@ -537,7 +540,7 @@ class CS2DtoBECAS(object):
             names = ['REGION%02d' % i for i in range(len(self.cs2d['regions']))]
             names.extend(['WEB%02d' % i for i in range(len(self.cs2d['webs']))])
             # standard offsets for shell
-            offsets = ['top' for i in range(len(self.cs2d['regions']))]
+            offsets = ['bot' for i in range(len(self.cs2d['regions']))]
             if not self.web_offsets:
                 # if web_offsets not provided
                 for web in range(len(self.cs2d['web_def'])):
@@ -550,7 +553,7 @@ class CS2DtoBECAS(object):
                 if r_offset=='mid':
                 #if r_name.startswith('WEB'):
                     offset = 0.0
-                if r_offset=='top':
+                if r_offset=='bot':
                     offset = -0.5
                 text = '*SHELL SECTION, ELSET=%s, COMPOSITE, OFFSET=%3.3f\n'
                 f.write(text % (r_name, offset))
@@ -655,10 +658,10 @@ class CS2DtoBECAS(object):
             except:
                 import imp
                 shellexpander = imp.load_source('shellexpander',
-                              os.path.join(self.path_shellexpander, 'src', 'shellexpander.py'))
+                              os.path.join(os.environ['SHELLEXP_BASEDIR'], 'src', 'shellexpander.py'))
 
                 shellexpander.main(args)
-                
+
 
     def output_te_ratio(self):
         """

@@ -40,19 +40,15 @@ BECASWrapper requires the path to the BECAS source code.
 Therefore, a system environment variable needs to be added to the system's or user's `.profile` pointing to the folder according to the following examples.
 
 `BECAS_BASEDIR` needs to point to the folder containing `src` and `examples`:
-
     
-    BECAS_BASEDIR=$HOME/git/BECAS/
-    export BECAS_BASEDIR
+    export BECAS_BASEDIR=$HOME/git/BECAS/
 
 If you are using shellexpander<=1.5, also the environment variable to this source code is required:
 
 `SHELLEXP_BASEDIR` needs to point to the folder containing `src`:
 
+    export SHELLEXP_BASEDIR=$HOME/git/shellexpander/
 
-    SHELLEXP_BASEDIR=$HOME/git/shellexpander/
-    export SHELLEXP_BASEDIR
-    
 Refresh your environment variables for verification using:
 
     $ source ~/.profile
