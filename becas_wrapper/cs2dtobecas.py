@@ -286,6 +286,8 @@ class CS2DtoBECAS(object):
         self.elset_defs = {}
 
         nr_air_n = len(self.airfoil)
+        if not self.open_te:
+            nr_air_n=nr_air_n-1
         nr_web_n = len(self.web_coord)
         nr_nodes = nr_air_n + nr_web_n
         # for closed TE, nr_elements = nr_nodes, for open TE, 1 element less
@@ -303,7 +305,10 @@ class CS2DtoBECAS(object):
         # place all nodal coordinates in one array. The elements are defined
         # by the node index.
         self.nodes = np.zeros( (nr_nodes, 3) )
-        self.nodes[:nr_air_n,:2] = self.airfoil[:,:]
+        if self.open_te:
+            self.nodes[:nr_air_n,:2] = self.airfoil[:,:]
+        else:
+            self.nodes[:nr_air_n,:2] = self.airfoil[:-1,:]
         if nr_web_n > 0:
             self.nodes[nr_air_n:,:2] = self.web_coord
 
