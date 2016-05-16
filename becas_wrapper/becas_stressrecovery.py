@@ -47,6 +47,24 @@ class BECASCSStressRecovery(Component):
         os.chdir(self.basedir)
 
 
+class SRAggregator(Component):
+
+
+    def __init__(self, config, s, ncases):
+        super(SRAggregator, self).__init__()
+
+        self.nsec = s.shape[0]
+        for i in range(s.shape[0]):
+            name = 'sec%03d' % i
+            self.add_param('blade_failure_index_%s' % name, np.zeros(ncases))
+
+        self.add_output('blade_failure_index', np.zeros((ncases, s.shape[0])))
+
+    def solve_nonlinear(self, params, unknowns, resids):
+
+        for i in range(self.nsec):
+            unknowns['blade_failure_index'][:, i] = params['blade_failure_index_sec%03d'%i]
+
 class BECASStressRecovery(Group):
     """
     Group for computing stresses and strains using BECAS
@@ -76,3 +94,5 @@ class BECASStressRecovery(Group):
 
         for i in range(self.nsec):
             b = par.add('sec%03d' % i, BECASCSStressRecovery('sec%03d' % i, config, s[i], ncases), promotes=['*'])
+
+        self.add('agg', SRAggregator(config, s, ncases), promotes=['*'])
