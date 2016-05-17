@@ -7,6 +7,7 @@ import os
 from openmdao.api import Component, Group, ParallelGroup
 
 from becas_wrapper import BECASWrapper
+from becas_wrapper import ksfunc
 
 
 class BECASCSStressRecovery(Component):
@@ -38,7 +39,7 @@ class BECASCSStressRecovery(Component):
 
         becas_hash = params[self.name + ':hash']
         workdir = 'becas_%s_%i' % (self.name, int(becas_hash))
-        print 'workdir', workdir
+
         os.chdir(workdir)
         self.becas.load_cases = params['load_cases_%s' % self.name]
         self.becas.compute()
@@ -59,11 +60,20 @@ class SRAggregator(Component):
             self.add_param('blade_failure_index_%s' % name, np.zeros(ncases))
 
         self.add_output('blade_failure_index', np.zeros((ncases, s.shape[0])))
+        self.add_output('blade_failure_index_ks', 0.)
 
     def solve_nonlinear(self, params, unknowns, resids):
 
         for i in range(self.nsec):
             unknowns['blade_failure_index'][:, i] = params['blade_failure_index_sec%03d'%i]
+            if np.isnan(unknowns['blade_failure_index'][:, i]).any():
+                print 'NaN in failure index'
+                unknowns['blade_failure_index'][:, i] = 0.
+
+        unknowns['blade_failure_index_ks'] = ksfunc(unknowns['blade_failure_index'])
+        if np.isnan(unknowns['blade_failure_index_ks']):
+            print 'NaN in failure index_ks'
+            unknowns['blade_failure_index_ks'] = 0.
 
 class BECASStressRecovery(Group):
     """
