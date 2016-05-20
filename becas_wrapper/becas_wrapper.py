@@ -255,7 +255,7 @@ class BECASWrapper(object):
                     out = subprocess.call(["matlab", "-nosplash", "-nodesktop", "-nojvm", "-r", "becas_section"])
                 else:
                     out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
-            print out
+            # print out
             # self._logger.info(out)
 
             if self.analysis_mode in ['stiffness', 'combined']:
