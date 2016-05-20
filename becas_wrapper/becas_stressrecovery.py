@@ -43,7 +43,10 @@ class BECASCSStressRecovery(Component):
         os.chdir(workdir)
         self.becas.load_cases = params['load_cases_%s' % self.name]
         self.becas.compute()
-        unknowns['blade_failure_index_%s' % self.name] = self.becas.max_failure_ks
+        try:
+            unknowns['blade_failure_index_%s' % self.name] = self.becas.max_failure_ks
+        except:
+            pass
 
         os.chdir(self.basedir)
 
@@ -64,16 +67,19 @@ class SRAggregator(Component):
 
     def solve_nonlinear(self, params, unknowns, resids):
 
-        for i in range(self.nsec):
-            unknowns['blade_failure_index'][:, i] = params['blade_failure_index_sec%03d'%i]
-            if np.isnan(unknowns['blade_failure_index'][:, i]).any():
-                print 'NaN in failure index'
-                unknowns['blade_failure_index'][:, i] = 0.
+        try:
+            for i in range(self.nsec):
+                unknowns['blade_failure_index'][:, i] = params['blade_failure_index_sec%03d'%i]
+                if np.isnan(unknowns['blade_failure_index'][:, i]).any():
+                    print 'NaN in failure index'
+                    unknowns['blade_failure_index'][:, i] = 0.
 
-        unknowns['blade_failure_index_ks'] = ksfunc(unknowns['blade_failure_index'])
-        if np.isnan(unknowns['blade_failure_index_ks']):
-            print 'NaN in failure index_ks'
-            unknowns['blade_failure_index_ks'] = 0.
+            unknowns['blade_failure_index_ks'] = ksfunc(unknowns['blade_failure_index'])
+            if np.isnan(unknowns['blade_failure_index_ks']):
+                print 'NaN in failure index_ks'
+                unknowns['blade_failure_index_ks'] = 0.
+        except:
+            print 'stress recovery failed!'
 
 class BECASStressRecovery(Group):
     """

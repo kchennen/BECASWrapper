@@ -255,7 +255,7 @@ class BECASWrapper(object):
                     out = subprocess.call(["matlab", "-nosplash", "-nodesktop", "-nojvm", "-r", "becas_section"])
                 else:
                     out = commands.getoutput('matlab -nosplash -nodesktop -nojvm -r %s' % 'becas_section')
-            # print out
+            print out
             # self._logger.info(out)
 
             if self.analysis_mode in ['stiffness', 'combined']:
@@ -597,8 +597,6 @@ class BECASWrapper(object):
             ks_failure.append(ksfunc(f.flatten(), rho=self.rho_ks))
 
             if self.plot_paraview:
-                if 'fd' in self.parent.itername:
-                    continue
                 path = os.path.join(self.basedir, self.path_plots)
                 if not os.path.exists(path):
                     os.mkdir(path)
@@ -616,8 +614,6 @@ class BECASWrapper(object):
     def paraview_oct2py(self, force=False):
 
         if self.plot_paraview:
-            if 'fd' in self.parent.itername and not force:
-                return
             path = os.path.join(self.basedir, self.path_plots)
             if not os.path.exists(path):
                 os.mkdir(path)
