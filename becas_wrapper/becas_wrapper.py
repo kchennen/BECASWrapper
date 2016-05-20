@@ -285,8 +285,10 @@ class BECASWrapper(object):
         out_str.append('[constitutive.Ks,solutions] = BECAS_Constitutive_Ks(utils);\n')
         if self.plot_paraview:  # and '-fd' not in self.itername:
             path = os.path.join(self.basedir, self.path_plots)
-            if not os.path.exists(path):
+            try:
                 os.mkdir(path)
+            except:
+                pass
             dirname = os.path.join(path, '%s_span%3.3f' % ('Sec', self.spanpos))
             # self._logger.info('BECAS_PARAVIEW: saving to %s' % dirname)
             out_str.append("BECAS_PARAVIEW('%s', utils);\n" % dirname)
@@ -342,8 +344,10 @@ class BECASWrapper(object):
 
             if self.plot_paraview:  # and '-fd' not in self.itername:
                 path = os.path.join(self.basedir, self.path_plots)
-                if not os.path.exists(path):
+                try:
                     os.mkdir(path)
+                except:
+                    pass
                 dirname = os.path.join(path, '%s_span%3.3f_case%i' % ('Sec', self.spanpos, i))
                 # self._logger.info('BECAS_PARAVIEW: saving to %s' % dirname)
                 out_str.append("warping=solutions.X*theta0'; \n")
@@ -598,8 +602,10 @@ class BECASWrapper(object):
 
             if self.plot_paraview:
                 path = os.path.join(self.basedir, self.path_plots)
-                if not os.path.exists(path):
+                try:
                     os.mkdir(path)
+                except:
+                    pass
                 dirname = os.path.join(path, 'BECAS_PARAVIEW%s_case%02d' % (self.itername, i))
                 # self._logger.info('BECAS_PARAVIEW: saving to %s' % dirname)
                 solutions = self.octave.get('solutions')
@@ -615,8 +621,10 @@ class BECASWrapper(object):
 
         if self.plot_paraview:
             path = os.path.join(self.basedir, self.path_plots)
-            if not os.path.exists(path):
+            try:
                 os.mkdir(path)
+            except:
+                pass
             dirname = os.path.join(path, 'BECAS_PARAVIEW%s' % self.itername)
             # self._logger.info('BECAS_PARAVIEW: saving to %s' % dirname)
             self.octave.run("BECAS_PARAVIEW('%s', utils)" % dirname)
