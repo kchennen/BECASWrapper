@@ -83,6 +83,7 @@ class CS2DtoBECAS(object):
         self.te_ratio = 0.
         self.thickness_ratio = np.array([])
         self.spline_type = 'ncubic'
+        self.min_layer_thickness = 0.
 
         for k, w in kwargs.iteritems():
             try:
@@ -572,8 +573,9 @@ class CS2DtoBECAS(object):
                         mname = materialname
                     plyname = 'ply%02d' % i
 
-                    layer_def = (r['thicknesses'][il], 3, mname,
-                                 r['angles'][il], plyname)
+                    if r['thicknesses'][il] >= self.min_layer_thickness:
+                        layer_def = (r['thicknesses'][il], 3, mname,
+                                     r['angles'][il], plyname)
                     f.write('%g, %d, %s, %g, %s\n' % layer_def )
 
             # Write material properties
