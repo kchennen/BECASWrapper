@@ -96,10 +96,10 @@ class CS2DtoBECAS(object):
 
         if __debug__:
             for reg in self.cs2d['regions']:
-                if ref['thicknesses'].amin()<=0.0:
+                if np.amin(reg['thicknesses'])<=0.0:
                     raise AssertionError("Discovered a 0 or negative thickness in the data");
             for reg in self.cs2d['webs']:
-                if ref['thicknesses'].amin()<=0.0:
+                if np.amin(reg['thicknesses'])<=0.0:
                     raise AssertionError("Discovered a 0 or negative thickness in the data");
 
         if not _PGL_installed:
