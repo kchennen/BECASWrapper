@@ -94,6 +94,14 @@ class CS2DtoBECAS(object):
     def compute(self, redistribute_flag=True):
         """  """
 
+        if __debug__:
+            for reg in self.cs2d['regions']:
+                if ref['thicknesses'].amin()<=0.0:
+                    raise AssertionError("Discovered a 0 or negative thickness in the data");
+            for reg in self.cs2d['webs']:
+                if ref['thicknesses'].amin()<=0.0:
+                    raise AssertionError("Discovered a 0 or negative thickness in the data");
+
         if not _PGL_installed:
             print('CS2DtoBECAS running in dry-run mode')
             return
