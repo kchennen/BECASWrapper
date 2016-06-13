@@ -200,7 +200,7 @@ class CS2DtoBECAS(object):
             for i, s in enumerate(self.DPs01):
                 self.dist[i][0] = s
 
-        afn = af.redistribute(self.dist_ni, dist=dist)
+        afn = af.redistribute(self.dist_ni, dist=self.dist)
         self.airfoil = afn.points
 
         self.total_points = self.airfoil.shape[0]
