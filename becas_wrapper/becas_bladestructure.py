@@ -77,6 +77,13 @@ class BECASCSStructure(Component):
         self.nr = len(st3d['regions'])
         self.ni_chord = ni_chord
 
+        # fix mesh distribution function after first run
+        # defaults to True
+        try:
+            self.fix_mesh_distribution = config['fix_mesh_distribution']
+        except:
+            self.fix_mesh_distribution = True
+
         # add materials properties array ((10, nmat))
         self.add_param('matprops', st3d['matprops'])
 
@@ -131,7 +138,7 @@ class BECASCSStructure(Component):
         self.csprops_ref_m1 = np.zeros(cs_size_ref)
         self.k_matrix_m1 = np.zeros((6,6))
         self.m_matrix_m1 = np.zeros((6,6))
-        
+
         self.add_output('%s:DPcoords' % name, np.zeros((self.nr + 1, 3)))
 
         self.workdir = 'becas_%s_%i' % (name, self.becas_hash)
@@ -142,6 +149,7 @@ class BECASCSStructure(Component):
 
         self.mesher = CS2DtoBECAS(self.cs2di, **config['CS2DtoBECAS'])
         self.becas = BECASWrapper(self.cs2di['s'], **config['BECASWrapper'])
+        self.redistribute_flag = True
 
     def _params2dict(self, params):
         """
@@ -210,9 +218,9 @@ class BECASCSStructure(Component):
         self._params2dict(params)
 
         self.mesher.cs2d = self.cs2d
-        
+
         try:
-            self.mesher.compute()
+            self.mesher.compute(self.redistribute_flag)
             self.becas.compute()
             if self.becas.success:
                 self.unknowns['%s:DPcoords' % self.name][:,0:2] = np.array(self.mesher.DPcoords)
@@ -238,6 +246,8 @@ class BECASCSStructure(Component):
             print('BECAS crashed for section %f' % self.cs2d['s'])
 
         os.chdir(self.basedir)
+        if self.fix_mesh_distribution:
+            self.redistribute_flag = False
 
 
 class Slice(Component):
