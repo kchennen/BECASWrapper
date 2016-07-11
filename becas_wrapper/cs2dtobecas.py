@@ -703,12 +703,12 @@ class CS2DtoBECAS(object):
 
         if not self.dry_run:
             try: #shellexpander >1.5
-               import shellexpander
-               if shellexpander.__version__:
-                   from shellexpander import shellexpander
-                   shellexp_sections = shellexpander.main(args)
-                   msh2d = shellexp_sections[args.sections]
-                   return msh2d
+                import shellexpander
+                if shellexpander.__version__:
+                    from shellexpander import shellexpander
+                    shellexp_sections = shellexpander.main(args)
+                    msh2d = shellexp_sections[args.sections]
+                    return msh2d
             except:
                 import imp
                 shellexpander = imp.load_source('shellexpander',
