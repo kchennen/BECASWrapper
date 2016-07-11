@@ -1,6 +1,7 @@
 
 import os
 import time
+import copy
 import numpy as np
 from string import digits
 
@@ -91,12 +92,62 @@ class CS2DtoBECAS(object):
             except:
                 pass
 
+    def clean_up_cs2d(self, my_cs2d):
+
+        ret_cs2d = copy.deepcopy(my_cs2d)
+        for j in range(len(ret_cs2d['regions'])):
+            ret_cs2d['regions'][j] = {}
+            tList = []
+            aList = []
+            ret_cs2d['regions'][j]['layers'] = []
+            for k in range(len(my_cs2d['regions'][j]['thicknesses'])):
+                if my_cs2d['regions'][j]['thicknesses'][k] > 0.0:
+                    tList.append(my_cs2d['regions'][j]['thicknesses'][k])
+                    aList.append(my_cs2d['regions'][j]['angles'][k])
+                    ret_cs2d['regions'][j]['layers'].append(my_cs2d['regions'][j]['layers'][k])
+            if len(ret_cs2d['regions'][j]['layers']) == 0:
+                raise AssertionError('The total thickness of the profile laminate is 0. I do not expect open cross sections.')
+            ret_cs2d['regions'][j]['thicknesses'] = np.array(tList)
+            ret_cs2d['regions'][j]['angles'] = np.array(aList)
+        ret_cs2d['webs'] = []
+        ret_cs2d['web_def'] = []
+        for j in range(len(my_cs2d['webs'])):
+            tmpDict = {}
+            tList = []
+            aList = []
+            tmpDict['layers'] = []
+            for k in range(len(my_cs2d['webs'][j]['thicknesses'])):
+                if my_cs2d['webs'][j]['thicknesses'][k] > 0.0:
+                    tList.append(my_cs2d['webs'][j]['thicknesses'][k])
+                    aList.append(my_cs2d['webs'][j]['angles'][k])
+                    tmpDict['layers'].append(my_cs2d['webs'][j]['layers'][k])
+            if len(tmpDict['layers']) > 0:
+                ret_cs2d['web_def'].append(my_cs2d['web_def'][j])
+                ret_cs2d['webs'].append(tmpDict)
+                ret_cs2d['webs'][-1]['thicknesses'] = np.array(tList)
+                ret_cs2d['webs'][-1]['angles'] = np.array(aList)
+
+        return ret_cs2d
+
     def compute(self, redistribute_flag=True):
         """  """
+
+        self.cs2d = self.clean_up_cs2d(self.cs2d)
+
+        if __debug__:
+            for reg in self.cs2d['regions']:
+                for x in np.nditer(reg['thicknesses']):
+                    if x <= 0.0:
+                        raise AssertionError("Discovered a 0 or negative thickness in the data");
+            for reg in self.cs2d['webs']:
+                for x in np.nditer(reg['thicknesses']):
+                    if x <= 0.0:
+                        raise AssertionError("Discovered a 0 or negative thickness in the data");
 
         if not _PGL_installed:
             print('CS2DtoBECAS running in dry-run mode')
             return
+
         tt = time.time()
 
         self.redistribute_flag = redistribute_flag
@@ -288,7 +339,7 @@ class CS2DtoBECAS(object):
 
         nr_air_n = len(self.airfoil)
         if not self.open_te:
-            nr_air_n=nr_air_n-1
+            nr_air_n = nr_air_n-1
         nr_web_n = len(self.web_coord)
         nr_nodes = nr_air_n + nr_web_n
         # for closed TE, nr_elements = nr_nodes, for open TE, 1 element less
@@ -470,9 +521,9 @@ class CS2DtoBECAS(object):
         def write_n_int_per_line(list_of_int, f, n):
             """Write the integers in list_of_int to the output file - n integers
             per line, separated by commas"""
-            i=0
+            i = 0
             for number in list_of_int:
-                i=i+1
+                i = i+1
                 f.write('%d' %(number ))
                 if i < len(list_of_int):
                     f.write(',  ')
@@ -551,10 +602,10 @@ class CS2DtoBECAS(object):
             for i, r in enumerate(self.cs2d['regions'] + self.cs2d['webs']):
                 r_name = names[i]
                 r_offset = offsets[i]
-                if r_offset=='mid':
+                if r_offset == 'mid':
                 #if r_name.startswith('WEB'):
                     offset = 0.0
-                if r_offset=='bot':
+                if r_offset == 'bot':
                     offset = -0.5
                 text = '*SHELL SECTION, ELSET=%s, COMPOSITE, OFFSET=%3.3f\n'
                 f.write(text % (r_name, offset))
@@ -648,6 +699,7 @@ class CS2DtoBECAS(object):
         args.becasdir = self.becas_inputs #--bdir
         args.debug = False #--debug, if present switch to True
         args.subelsets = self.subelsets
+        args.verbose = False
 
         if not self.dry_run:
             try: #shellexpander >1.5

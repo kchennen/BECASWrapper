@@ -5,3 +5,5 @@
 /openmdao_log.txt
 /setup.pyc
 /setup.cfg
+*.pyo
+*.swp
