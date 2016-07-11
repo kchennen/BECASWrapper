@@ -129,7 +129,7 @@ class CS2DtoBECAS(object):
 
         return ret_cs2d
 
-    def compute(self, redistribute_flag = True):
+    def compute(self, redistribute_flag=True):
         """  """
 
         self.cs2d = self.clean_up_cs2d(self.cs2d)
@@ -163,7 +163,7 @@ class CS2DtoBECAS(object):
         self.web_element_idx = []   # web element indices
         self.webDPs = []
 
-        self.coords = AirfoilShape(points = self.cs2d['coords'], spline = self.spline_type)
+        self.coords = AirfoilShape(points=self.cs2d['coords'], spline=self.spline_type)
 
         self.compute_max_layers()
         self.compute_airfoil()
@@ -171,7 +171,7 @@ class CS2DtoBECAS(object):
             # self.compute_thickness_to_airfoil_ratio()
         self.add_shearweb_nodes()
         self.create_elements()
-        self.create_elements_3d(reverse_normals = False)
+        self.create_elements_3d(reverse_normals=False)
         self.write_abaqus_inp()
         self.write_becas_inp()
         print 'CS2DtoBECAS time:', time.time() - tt
@@ -251,7 +251,7 @@ class CS2DtoBECAS(object):
             for i, s in enumerate(self.DPs01):
                 self.dist[i][0] = s
 
-        afn = af.redistribute(self.dist_ni, dist = dist)
+        afn = af.redistribute(self.dist_ni, dist=self.dist)
         self.airfoil = afn.points
 
         self.total_points = self.airfoil.shape[0]
@@ -315,11 +315,11 @@ class CS2DtoBECAS(object):
                 element_counter += nr_points - 2
                 # remember to start and stop indices for the shear web nodes
                 try:
-                    self.web_coord = np.append(self.web_coord, tmp, axis = 0)
+                    self.web_coord = np.append(self.web_coord, tmp, axis=0)
                 except:
                     self.web_coord = tmp.copy()
 
-    def create_elements(self, debug = False):
+    def create_elements(self, debug=False):
         """
         Create the elements and assign element sets to the different regions.
 
@@ -369,13 +369,13 @@ class CS2DtoBECAS(object):
         # have as many elements as there are nodes on the airfoil
         # elements[element_nr, (node1,node2)]: shape=(n,2)
         # for each web, we have nr_web_nodes+1 number of elements
-        self.elements = np.ndarray((nr_elements, 2), dtype = np.int)
+        self.elements = np.ndarray((nr_elements, 2), dtype=np.int)
         if self.open_te:
-            self.elements[:nr_air_el,0] = np.arange(nr_air_n-1, dtype = np.int)
+            self.elements[:nr_air_el,0] = np.arange(nr_air_n-1, dtype=np.int)
             self.elements[:nr_air_el,1] = self.elements[:nr_air_el, 0] + 1
         else:
             # when the airfoil is closed, add one node number too much...
-            self.elements[:nr_air_el,0] = np.arange(nr_air_n, dtype = np.int)
+            self.elements[:nr_air_el,0] = np.arange(nr_air_n, dtype=np.int)
             self.elements[:nr_air_el,1] = self.elements[:nr_air_el,0] + 1
             # last node on last element is first node, airfoil is now closed
             self.elements[nr_air_el-1,1] = 0
@@ -417,7 +417,7 @@ class CS2DtoBECAS(object):
                 self.elements[iw_start,:] = [self.web_to_airfoil_idx[i][0], self.web_element_idx[i][0]]
 
                 # elements in between
-                wnodes = np.arange(self.web_element_idx[i][0], self.web_element_idx[i][1], dtype = np.int)
+                wnodes = np.arange(self.web_element_idx[i][0], self.web_element_idx[i][1], dtype=np.int)
                 self.elements[iw_start+1:iw_end, 0] = wnodes
                 self.elements[iw_start+1:iw_end, 1] = wnodes + 1
 
@@ -432,22 +432,22 @@ class CS2DtoBECAS(object):
             # and now we can populate the different regions with their
             # corresponding elements
             if self.webDPs[i][0] in [-1., 1.] and abs(self.TEangle) > 150.:
-                self.elset_defs[w_name] = np.arange(el_offset, el_offset+interior_nodes + 1, dtype = np.int)
+                self.elset_defs[w_name] = np.arange(el_offset, el_offset+interior_nodes + 1, dtype=np.int)
                 suc_side.extend(range(el_offset, el_offset+interior_nodes + 1))
                 print('TEangle > 150, adding to suc_side! s=%3.3f %s' % (self.cs2d['s'], w_name))
             else:
-                self.elset_defs[w_name] = np.arange(el_offset, el_offset+interior_nodes + 1, dtype = np.int)
+                self.elset_defs[w_name] = np.arange(el_offset, el_offset+interior_nodes + 1, dtype=np.int)
                 web_el.extend(range(el_offset, el_offset+interior_nodes + 1))
             el_offset += interior_nodes + 1
 
         if len(web_el) > 0:
-            self.elset_defs['WEBS'] = np.array(web_el, dtype = np.int)
+            self.elset_defs['WEBS'] = np.array(web_el, dtype=np.int)
 
         # element groups for the regions
         for i, r in enumerate(self.cs2d['regions']):
             r_name = 'REGION%02d' % i
             # do not include element r.s1_i, that is included in the next elset
-            self.elset_defs[r_name] = np.arange(self.iDPs[i], self.iDPs[i+1], dtype = np.int)
+            self.elset_defs[r_name] = np.arange(self.iDPs[i], self.iDPs[i+1], dtype=np.int)
 
             # group in suction and pressure side (s_LE=0)
             if self.cs2d['DPs'][i + 1] <= 0:
@@ -457,9 +457,9 @@ class CS2DtoBECAS(object):
 
         tmp = np.array(list(pre_side)+list(suc_side))
         pre0, pre1 = tmp.min(), tmp.max()
-        self.elset_defs['SURFACE'] = np.arange(pre0, pre1+1, dtype = np.int)
+        self.elset_defs['SURFACE'] = np.arange(pre0, pre1+1, dtype=np.int)
 
-    def create_elements_3d(self, reverse_normals = False):
+    def create_elements_3d(self, reverse_normals=False):
         """
         Shellexpander wants a 3D section as input. Create a 3D section
         which is just like the 2D version except with a depth defined as 1%
@@ -477,7 +477,7 @@ class CS2DtoBECAS(object):
         self.nodes_3d[:nr_nodes_2d, :] = self.nodes
         self.nodes_3d[nr_nodes_2d:, :] = self.nodes + np.array([0,0,depth])
         # Generate shell elements
-        self.el_3d = np.ndarray( (len(self.elements), 4), dtype = np.int)
+        self.el_3d = np.ndarray( (len(self.elements), 4), dtype=np.int)
         self.el_3d[:,:2] = self.elements
         self.el_3d[:,2] = self.elements[:,1] + nr_nodes_2d
         self.el_3d[:,3] = self.elements[:,0] + nr_nodes_2d
@@ -513,7 +513,7 @@ class CS2DtoBECAS(object):
 
             self.onebasednumbering = False
 
-    def write_abaqus_inp(self, fname = False):
+    def write_abaqus_inp(self, fname=False):
         """Create Abaqus inp file which will be served to shellexpander so
         the actual BECAS input can be created.
         """
@@ -553,9 +553,9 @@ class CS2DtoBECAS(object):
             f.write('********************\n')
             f.write('*NODE\n')
             tmp = np.ndarray( (len(self.nodes_3d),4) )
-            tmp[:,0] = np.arange(len(self.nodes_3d), dtype = np.int) + off
+            tmp[:,0] = np.arange(len(self.nodes_3d), dtype=np.int) + off
             tmp[:,1:] = self.nodes_3d
-            np.savetxt(f, tmp, fmt = '%1.0f, %1.20e, %1.20e, %1.20e')
+            np.savetxt(f, tmp, fmt='%1.0f, %1.20e, %1.20e, %1.20e')
 
             # Write element definitions
             f.write('**\n')
@@ -564,9 +564,9 @@ class CS2DtoBECAS(object):
             f.write('***********\n')
             f.write('*ELEMENT, TYPE=S4, ELSET=%s\n' % self.section_name)
             tmp = np.ndarray( (len(self.el_3d),5) )
-            tmp[:,0] = np.arange(len(self.el_3d), dtype = np.int) + off
+            tmp[:,0] = np.arange(len(self.el_3d), dtype=np.int) + off
             tmp[:,1:] = self.el_3d
-            np.savetxt(f, tmp, fmt = '%i, %i, %i, %i, %i')
+            np.savetxt(f, tmp, fmt='%i, %i, %i, %i, %i')
 
             # Write new element sets
             f.write('**\n')
