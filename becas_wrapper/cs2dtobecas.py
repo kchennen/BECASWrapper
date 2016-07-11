@@ -1,6 +1,7 @@
 
 import os
 import time
+import copy
 import numpy as np
 from string import digits
 
@@ -91,20 +92,62 @@ class CS2DtoBECAS(object):
             except:
                 pass
 
+    def clean_up_cs2d(self, my_cs2d):
+
+        ret_cs2d=copy.deepcopy(my_cs2d)
+        for j in range(len(ret_cs2d['regions'])):
+            ret_cs2d['regions'][j]={}
+            tList=[]
+            aList=[]
+            ret_cs2d['regions'][j]['layers']=[]
+            for k in range(len(my_cs2d['regions'][j]['thicknesses'])):
+                if my_cs2d['regions'][j]['thicknesses'][k] > 0.0:
+                    tList.append(my_cs2d['regions'][j]['thicknesses'][k])
+                    aList.append(my_cs2d['regions'][j]['angles'][k])
+                    ret_cs2d['regions'][j]['layers'].append(my_cs2d['regions'][j]['layers'][k])
+            if len(ret_cs2d['regions'][j]['layers'])==0:
+                raise AssertionError('The total thickness of the profile laminate is 0. I do not expect open cross sections.')
+            ret_cs2d['regions'][j]['thicknesses']=np.array(tList)
+            ret_cs2d['regions'][j]['angles']=np.array(aList)
+        ret_cs2d['webs']=[]
+        ret_cs2d['web_def']=[]
+        for j in range(len(my_cs2d['webs'])):
+            tmpDict={}
+            tList=[]
+            aList=[]
+            tmpDict['layers']=[]
+            for k in range(len(my_cs2d['webs'][j]['thicknesses'])):
+                if my_cs2d['webs'][j]['thicknesses'][k] > 0.0:
+                    tList.append(my_cs2d['webs'][j]['thicknesses'][k])
+                    aList.append(my_cs2d['webs'][j]['angles'][k])
+                    tmpDict['layers'].append(my_cs2d['webs'][j]['layers'][k])
+            if len(tmpDict['layers'])>0:
+                ret_cs2d['web_def'].append(my_cs2d['web_def'][j])
+                ret_cs2d['webs'].append(tmpDict)
+                ret_cs2d['webs'][-1]['thicknesses']=np.array(tList)
+                ret_cs2d['webs'][-1]['angles']=np.array(aList)
+
+        return ret_cs2d
+
     def compute(self, redistribute_flag=True):
         """  """
 
+        self.cs2d=self.clean_up_cs2d(self.cs2d)
+
         if __debug__:
             for reg in self.cs2d['regions']:
-                if np.amin(reg['thicknesses'])<=0.0:
-                    raise AssertionError("Discovered a 0 or negative thickness in the data");
+                for x in np.nditer(reg['thicknesses']):
+                    if x<=0.0:
+                        raise AssertionError("Discovered a 0 or negative thickness in the data");
             for reg in self.cs2d['webs']:
-                if np.amin(reg['thicknesses'])<=0.0:
-                    raise AssertionError("Discovered a 0 or negative thickness in the data");
+                for x in np.nditer(reg['thicknesses']):
+                    if x<=0.0:
+                        raise AssertionError("Discovered a 0 or negative thickness in the data");
 
         if not _PGL_installed:
             print('CS2DtoBECAS running in dry-run mode')
             return
+
         tt = time.time()
 
         self.redistribute_flag = redistribute_flag
